@@ -1,0 +1,6 @@
+[submodule "docs"]
+	path = docs
+	url = https://github.com/autohdw/flames-docs.git
+[submodule "misc/doxygen-awesome-css"]
+	path = misc/doxygen-awesome-css
+	url = https://github.com/autohdw/doxygen-awesome-css.git

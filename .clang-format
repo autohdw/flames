@@ -1,0 +1,20 @@
+Language: Cpp
+BasedOnStyle: LLVM
+IndentWidth: 4
+ColumnLimit: 120
+PointerAlignment: Left
+ReferenceAlignment: Pointer
+AllowShortBlocksOnASingleLine: true
+AllowShortCaseLabelsOnASingleLine: true
+AllowShortEnumsOnASingleLine: true
+AllowShortFunctionsOnASingleLine: true
+AllowShortIfStatementsOnASingleLine: AllIfsAndElse
+AllowShortLambdasOnASingleLine: All
+AllowShortLoopsOnASingleLine: true
+AlignConsecutiveMacros: true
+AlignConsecutiveAssignments: true
+AlwaysBreakTemplateDeclarations: Yes
+Cpp11BracedListStyle: false
+IndentPPDirectives: AfterHash
+SpacesInLineCommentPrefix:
+  Minimum: 1

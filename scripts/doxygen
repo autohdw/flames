@@ -1,0 +1,7 @@
+#!/bin/bash
+shopt -s extglob
+doxygen misc/Doxyfile
+cd docs
+rm !(.git|favicon.ico|functions)
+cd ..
+cp -r misc/_doxygen/html/. docs/
