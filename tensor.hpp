@@ -2,23 +2,22 @@
 #define _FLAMES_TENSOR_HPP_
 
 #ifndef _FLAMES_CORE_HPP_
-#include "core.hpp"
+#    include "core.hpp"
 #endif
 
 #ifndef FLAMES_TENSOR_PARTITION_COMPLETE
-#ifdef FLAMES_MAT_PARTITION_COMPLETE
-#define FLAMES_TENSOR_PARTITION_COMPLETE
-#endif
+#    ifdef FLAMES_MAT_PARTITION_COMPLETE
+#        define FLAMES_TENSOR_PARTITION_COMPLETE
+#    endif
 #endif
 
 namespace flames {
 template <typename T, size_t n_rows, size_t n_cols, size_t n_slices, MatType type>
 class Tensor {
-    public:
-
+  public:
     using element_type = T;
-    using value_type = T;
-    using View = MatView<T, n_rows, n_cols, type>;
+    using value_type   = T;
+    using View         = MatView<T, n_rows, n_cols, type>;
 
     Tensor() {
 #ifdef FLAMES_TENSOR_PARTITION_COMPLETE
@@ -38,9 +37,7 @@ class Tensor {
                                            : (1 + n_rows) * n_rows / 2;
     }
 
-    inline static constexpr size_t size() noexcept {
-        return n_slices * size();
-    }
+    inline static constexpr size_t size() noexcept { return n_slices * size(); }
 
     inline View slice(size_t index) const {
         assert(index < n_slices && "Index should be within in range for MatView::slice(index).");
@@ -52,15 +49,11 @@ class Tensor {
         return const_cast<T*>(_data + index * matSize());
     }
 
-    inline View operator[](size_t index) const {
-        return slice(index);
-    }
+    inline View operator[](size_t index) const { return slice(index); }
 
-    inline View operator[](size_t index) {
-        return slice(index);
-    }
+    inline View operator[](size_t index) { return slice(index); }
 
-    private:
+  private:
     T _data[type == MatType::NORMAL     ? n_slices * n_rows * n_cols
             : type == MatType::DIAGONAL ? n_slices * n_rows
             : type == MatType::SCALAR   ? n_slices * 1
@@ -70,6 +63,6 @@ class Tensor {
                                         : n_slices * (1 + n_rows) * n_rows / 2];
 };
 
-}
+} // namespace flames
 
 #endif

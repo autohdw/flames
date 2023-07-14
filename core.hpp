@@ -32,7 +32,7 @@
  *   WARNING: [HLS 207-1462] template template parameter using 'typename' is a C++17 extension
  *   WARNING: [HLS 207-5292] unused parameter '...'
  * They are safe to ignore, so all warnings of the FLAMES library are suppressed.
- * You can restore them by defining 'FLAMES_PRESERVE_WARNING'
+ * You can restore them by defining `FLAMES_PRESERVE_WARNING`
  */
 #ifndef FLAMES_KEEP_WARNING
 #    ifdef __SYNTHESIS__
@@ -102,11 +102,18 @@
 #        define FLAMES_MAT_TIMES_UNROLL_FACTOR 32
 #    endif
 #endif
-#ifndef FLAMES_MAT_DOT_UNROLL_FACTOR
+#ifndef FLAMES_MAT_EMUL_UNROLL_FACTOR
 #    ifdef FLAMES_UNROLL_FACTOR
-#        define FLAMES_MAT_DOT_UNROLL_FACTOR FLAMES_UNROLL_FACTOR
+#        define FLAMES_MAT_EMUL_UNROLL_FACTOR FLAMES_UNROLL_FACTOR
 #    else
-#        define FLAMES_MAT_DOT_UNROLL_FACTOR 32
+#        define FLAMES_MAT_EMUL_UNROLL_FACTOR 32
+#    endif
+#endif
+#ifndef FLAMES_MAT_BOOL_OPER_UNROLL_FACTOR
+#    ifdef FLAMES_UNROLL_FACTOR
+#        define FLAMES_MAT_BOOL_OPER_UNROLL_FACTOR FLAMES_UNROLL_FACTOR
+#    else
+#        define FLAMES_MAT_BOOL_OPER_UNROLL_FACTOR 32
 #    endif
 #endif
 #ifndef FLAMES_MAT_ABS_UNROLL_FACTOR
@@ -604,17 +611,16 @@ class Mat {
     friend class Tensor;
 
   public:
-
     using element_type = T;
-    using value_type = T;
+    using value_type   = T;
 
     /**
      * @brief Construct a new Mat object.
      *
      * @details This is the default constructor.
      *          You can set the array partition using macro
-     *          'FLAMES_MAT_PARTITION_COMPLETE' to set a complete array partition
-     *          and 'FLAMES_MAT_PARTITION_FACTOR' to set a block partition with the specific factor.
+     *          `FLAMES_MAT_PARTITION_COMPLETE` to set a complete array partition
+     *          and `FLAMES_MAT_PARTITION_FACTOR` to set a block partition with the specific factor.
      * @note Data is stored as a row major sequence.
      */
     Mat() {
@@ -632,7 +638,7 @@ class Mat {
      * @brief Construct a new Mat object with initial value.
      *
      * @details All values are set to the initial value you specify.
-     *          You can configure macro 'FLAMES_MAT_SET_VALUE_UNROLL_FACTOR'
+     *          You can configure macro `FLAMES_MAT_SET_VALUE_UNROLL_FACTOR`
      *          to set the initialization unroll factor.
      * @param val The initial value.
      */
@@ -651,10 +657,10 @@ class Mat {
     /**
      * @brief Copy constructor from a Mat object.
      *
-     * @details Macro 'FLAMES_MAT_COPY_UNROLL_FACTOR' to configure the unrolling factor.
+     * @details Macro `FLAMES_MAT_COPY_UNROLL_FACTOR` to configure the unrolling factor.
      *          You can set the array partition using macro
-     *          'FLAMES_MAT_PARTITION_COMPLETE' to set a complete array partition
-     *          and 'FLAMES_MAT_PARTITION_FACTOR' to set a block partition with the specific factor.
+     *          `FLAMES_MAT_PARTITION_COMPLETE` to set a complete array partition
+     *          and `FLAMES_MAT_PARTITION_FACTOR` to set a block partition with the specific factor.
      * @param mat The matrix to be copied.
      */
     Mat(const Mat& mat) {
@@ -718,8 +724,8 @@ class Mat {
      *
      * @param vec The std::vector storing data in row major.
      * @details You can set the array partition using macro
-     *          'FLAMES_MAT_PARTITION_COMPLETE' to set a complete array partition
-     *          and 'FLAMES_MAT_PARTITION_FACTOR' to set a block partition with the specific factor.
+     *          `FLAMES_MAT_PARTITION_COMPLETE` to set a complete array partition
+     *          and `FLAMES_MAT_PARTITION_FACTOR` to set a block partition with the specific factor.
      */
     Mat(const std::vector<T>& vec) {
         assert(vec.size() == size() && "Initialization vector size disagrees.");
@@ -738,9 +744,8 @@ class Mat {
 #endif
     }
 
-//   public: // original private
-public:
-
+    //   public: // original private
+  public:
     /**
      * @brief Construct a new Mat object from raw data pointer.
      *
@@ -1021,8 +1026,8 @@ public:
      * @brief Matrix plus matrix with same MatType.
      *
      * @details The result is stored to 'this'.
-     *          You may configure 'FLAMES_MAT_PLUS_UNROLL_FACTOR'
-     *          or 'FLAMES_UNROLL_FACTOR' to doing addition in parallel.
+     *          You may configure `FLAMES_MAT_PLUS_UNROLL_FACTOR`
+     *          or `FLAMES_UNROLL_FACTOR` to doing addition in parallel.
      * @tparam M1 The left matrix type.
      * @tparam _unused1 (unused)
      * @tparam M2 The right matrix type.
@@ -1050,8 +1055,8 @@ public:
      * @brief Matrix plus matrix into NORMAL.
      *
      * @details The result is stored to 'this'.
-     *          You may configure 'FLAMES_MAT_PLUS_UNROLL_FACTOR'
-     *          or 'FLAMES_UNROLL_FACTOR' to doing addition in parallel.
+     *          You may configure `FLAMES_MAT_PLUS_UNROLL_FACTOR`
+     *          or `FLAMES_UNROLL_FACTOR` to doing addition in parallel.
      * @tparam M1 The left matrix type.
      * @tparam _unused1 (unused)
      * @tparam M2 The right matrix type.
@@ -1086,8 +1091,8 @@ public:
      * @brief Matrix plus matrix into DIAGONAL.
      *
      * @details The result is stored to 'this'.
-     *          You may configure 'FLAMES_MAT_PLUS_UNROLL_FACTOR'
-     *          or 'FLAMES_UNROLL_FACTOR' to doing addition in parallel.
+     *          You may configure `FLAMES_MAT_PLUS_UNROLL_FACTOR`
+     *          or `FLAMES_UNROLL_FACTOR` to doing addition in parallel.
      * @tparam M1 The left matrix type.
      * @tparam _unused1 (unused)
      * @tparam M2 The right matrix type.
@@ -1147,8 +1152,8 @@ public:
      * @brief Matrix plus matrix into UPPER.
      *
      * @details The result is stored to 'this'.
-     *          You may configure 'FLAMES_MAT_PLUS_UNROLL_FACTOR'
-     *          or 'FLAMES_UNROLL_FACTOR' to doing addition in parallel.
+     *          You may configure `FLAMES_MAT_PLUS_UNROLL_FACTOR`
+     *          or `FLAMES_UNROLL_FACTOR` to doing addition in parallel.
      * @tparam M1 The left matrix type.
      * @tparam _unused1 (unused)
      * @tparam M2 The right matrix type.
@@ -1183,8 +1188,8 @@ public:
      * @brief Matrix plus matrix into LOWER.
      *
      * @details The result is stored to 'this'.
-     *          You may configure 'FLAMES_MAT_PLUS_UNROLL_FACTOR'
-     *          or 'FLAMES_UNROLL_FACTOR' to doing addition in parallel.
+     *          You may configure `FLAMES_MAT_PLUS_UNROLL_FACTOR`
+     *          or `FLAMES_UNROLL_FACTOR` to doing addition in parallel.
      * @tparam M1 The left matrix type.
      * @tparam _unused1 (unused)
      * @tparam M2 The right matrix type.
@@ -1219,8 +1224,8 @@ public:
      * @brief Matrix plus matrix into SUPPER.
      *
      * @details The result is stored to 'this'.
-     *          You may configure 'FLAMES_MAT_PLUS_UNROLL_FACTOR'
-     *          or 'FLAMES_UNROLL_FACTOR' to doing addition in parallel.
+     *          You may configure `FLAMES_MAT_PLUS_UNROLL_FACTOR`
+     *          or `FLAMES_UNROLL_FACTOR` to doing addition in parallel.
      * @tparam M1 The left matrix type.
      * @tparam _unused1 (unused)
      * @tparam M2 The right matrix type.
@@ -1255,8 +1260,8 @@ public:
      * @brief Matrix plus matrix into SLOWER.
      *
      * @details The result is stored to 'this'.
-     *          You may configure 'FLAMES_MAT_PLUS_UNROLL_FACTOR'
-     *          or 'FLAMES_UNROLL_FACTOR' to doing addition in parallel.
+     *          You may configure `FLAMES_MAT_PLUS_UNROLL_FACTOR`
+     *          or `FLAMES_UNROLL_FACTOR` to doing addition in parallel.
      * @tparam M1 The left matrix type.
      * @tparam _unused1 (unused)
      * @tparam M2 The right matrix type.
@@ -1291,8 +1296,8 @@ public:
      * @brief Matrix plus matrix into SYM.
      *
      * @details The result is stored to 'this'.
-     *          You may configure 'FLAMES_MAT_PLUS_UNROLL_FACTOR'
-     *          or 'FLAMES_UNROLL_FACTOR' to doing addition in parallel.
+     *          You may configure `FLAMES_MAT_PLUS_UNROLL_FACTOR`
+     *          or `FLAMES_UNROLL_FACTOR` to doing addition in parallel.
      * @tparam M1 The left matrix type.
      * @tparam _unused1 (unused)
      * @tparam M2 The right matrix type.
@@ -1326,8 +1331,8 @@ public:
      * @brief Matrix plus matrix into ASYM.
      *
      * @details The result is stored to 'this'.
-     *          You may configure 'FLAMES_MAT_PLUS_UNROLL_FACTOR'
-     *          or 'FLAMES_UNROLL_FACTOR' to doing addition in parallel.
+     *          You may configure `FLAMES_MAT_PLUS_UNROLL_FACTOR`
+     *          or `FLAMES_UNROLL_FACTOR` to doing addition in parallel.
      * @tparam M1 The left matrix type.
      * @tparam _unused1 (unused)
      * @tparam M2 The right matrix type.
@@ -1379,8 +1384,8 @@ public:
      * @brief Matrix minus matrix with same MatType.
      *
      * @details The result is stored to 'this'.
-     *          You may configure 'FLAMES_MAT_MINUS_UNROLL_FACTOR'
-     *          or 'FLAMES_UNROLL_FACTOR' to doing subtraction in parallel.
+     *          You may configure `FLAMES_MAT_MINUS_UNROLL_FACTOR`
+     *          or `FLAMES_UNROLL_FACTOR` to doing subtraction in parallel.
      * @tparam M1 The left matrix type.
      * @tparam _unused1 (unused)
      * @tparam M2 The right matrix type.
@@ -1408,8 +1413,8 @@ public:
      * @brief Matrix minus matrix into NORMAL.
      *
      * @details The result is stored to 'this'.
-     *          You may configure 'FLAMES_MAT_MINUS_UNROLL_FACTOR'
-     *          or 'FLAMES_UNROLL_FACTOR' to doing subtraction in parallel.
+     *          You may configure `FLAMES_MAT_MINUS_UNROLL_FACTOR`
+     *          or `FLAMES_UNROLL_FACTOR` to doing subtraction in parallel.
      * @tparam M1 The left matrix type.
      * @tparam _unused1 (unused)
      * @tparam M2 The right matrix type.
@@ -1444,8 +1449,8 @@ public:
      * @brief Matrix minus matrix into DIAGONAL.
      *
      * @details The result is stored to 'this'.
-     *          You may configure 'FLAMES_MAT_MINUS_UNROLL_FACTOR'
-     *          or 'FLAMES_UNROLL_FACTOR' to doing subtraction in parallel.
+     *          You may configure `FLAMES_MAT_MINUS_UNROLL_FACTOR`
+     *          or `FLAMES_UNROLL_FACTOR` to doing subtraction in parallel.
      * @tparam M1 The left matrix type.
      * @tparam _unused1 (unused)
      * @tparam M2 The right matrix type.
@@ -1476,8 +1481,8 @@ public:
      * @brief Matrix minus matrix into SCALAR.
      *
      * @details The result is stored to 'this'.
-     *          You may configure 'FLAMES_MAT_MINUS_UNROLL_FACTOR'
-     *          or 'FLAMES_UNROLL_FACTOR' to doing subtraction in parallel.
+     *          You may configure `FLAMES_MAT_MINUS_UNROLL_FACTOR`
+     *          or `FLAMES_UNROLL_FACTOR` to doing subtraction in parallel.
      * @tparam M1 The left matrix type.
      * @tparam _unused1 (unused)
      * @tparam M2 The right matrix type.
@@ -1506,8 +1511,8 @@ public:
      * @brief Matrix minus matrix into UPPER.
      *
      * @details The result is stored to 'this'.
-     *          You may configure 'FLAMES_MAT_MINUS_UNROLL_FACTOR'
-     *          or 'FLAMES_UNROLL_FACTOR' to doing subtraction in parallel.
+     *          You may configure `FLAMES_MAT_MINUS_UNROLL_FACTOR`
+     *          or `FLAMES_UNROLL_FACTOR` to doing subtraction in parallel.
      * @tparam M1 The left matrix type.
      * @tparam _unused1 (unused)
      * @tparam M2 The right matrix type.
@@ -1542,8 +1547,8 @@ public:
      * @brief Matrix minus matrix into LOWER.
      *
      * @details The result is stored to 'this'.
-     *          You may configure 'FLAMES_MAT_MINUS_UNROLL_FACTOR'
-     *          or 'FLAMES_UNROLL_FACTOR' to doing subtraction in parallel.
+     *          You may configure `FLAMES_MAT_MINUS_UNROLL_FACTOR`
+     *          or `FLAMES_UNROLL_FACTOR` to doing subtraction in parallel.
      * @tparam M1 The left matrix type.
      * @tparam _unused1 (unused)
      * @tparam M2 The right matrix type.
@@ -1578,8 +1583,8 @@ public:
      * @brief Matrix minus matrix into SUPPER.
      *
      * @details The result is stored to 'this'.
-     *          You may configure 'FLAMES_MAT_MINUS_UNROLL_FACTOR'
-     *          or 'FLAMES_UNROLL_FACTOR' to doing subtraction in parallel.
+     *          You may configure `FLAMES_MAT_MINUS_UNROLL_FACTOR`
+     *          or `FLAMES_UNROLL_FACTOR` to doing subtraction in parallel.
      * @tparam M1 The left matrix type.
      * @tparam _unused1 (unused)
      * @tparam M2 The right matrix type.
@@ -1614,8 +1619,8 @@ public:
      * @brief Matrix minus matrix into SLOWER.
      *
      * @details The result is stored to 'this'.
-     *          You may configure 'FLAMES_MAT_MINUS_UNROLL_FACTOR'
-     *          or 'FLAMES_UNROLL_FACTOR' to doing subtraction in parallel.
+     *          You may configure `FLAMES_MAT_MINUS_UNROLL_FACTOR`
+     *          or `FLAMES_UNROLL_FACTOR` to doing subtraction in parallel.
      * @tparam M1 The left matrix type.
      * @tparam _unused1 (unused)
      * @tparam M2 The right matrix type.
@@ -1650,8 +1655,8 @@ public:
      * @brief Matrix minus matrix into SYM.
      *
      * @details The result is stored to 'this'.
-     *          You may configure 'FLAMES_MAT_MINUS_UNROLL_FACTOR'
-     *          or 'FLAMES_UNROLL_FACTOR' to doing subtraction in parallel.
+     *          You may configure `FLAMES_MAT_MINUS_UNROLL_FACTOR`
+     *          or `FLAMES_UNROLL_FACTOR` to doing subtraction in parallel.
      * @tparam M1 The left matrix type.
      * @tparam _unused1 (unused)
      * @tparam M2 The right matrix type.
@@ -1685,8 +1690,8 @@ public:
      * @brief Matrix minus matrix into ASYM.
      *
      * @details The result is stored to 'this'.
-     *          You may configure 'FLAMES_MAT_MINUS_UNROLL_FACTOR'
-     *          or 'FLAMES_UNROLL_FACTOR' to doing subtraction in parallel.
+     *          You may configure `FLAMES_MAT_MINUS_UNROLL_FACTOR`
+     *          or `FLAMES_UNROLL_FACTOR` to doing subtraction in parallel.
      * @tparam M1 The left matrix type.
      * @tparam _unused1 (unused)
      * @tparam M2 The right matrix type.
@@ -1721,8 +1726,8 @@ public:
      * @brief Matrix self minus a matrix.
      *
      * @details The result is stored to 'this'.
-     *          You may configure 'FLAMES_MAT_MINUS_UNROLL_FACTOR'
-     *          or 'FLAMES_UNROLL_FACTOR' to doing subtraction in parallel.
+     *          You may configure `FLAMES_MAT_MINUS_UNROLL_FACTOR`
+     *          or `FLAMES_UNROLL_FACTOR` to doing subtraction in parallel.
      * @tparam M The matrix type of the minus matrix.
      * @tparam _unused (unused)
      * @tparam T2 The minus matrix type.
@@ -1747,8 +1752,8 @@ public:
      *
      * @details This scalar is C++ arithmetic types, like double and int.
      *          The result is stored to 'this'.
-     *          You may configure 'FLAMES_MAT_SCALAR_TIMES_UNROLL_FACTOR'
-     *          or 'FLAMES_UNROLL_FACTOR' to doing multiplication in parallel.
+     *          You may configure `FLAMES_MAT_SCALAR_TIMES_UNROLL_FACTOR`
+     *          or `FLAMES_UNROLL_FACTOR` to doing multiplication in parallel.
      * @tparam M The matrix type.
      * @tparam _unused (unused)
      * @tparam ScalarT The scalar type.
@@ -1776,8 +1781,8 @@ public:
      *
      * @details This scalar is std::complex.
      *          The result is stored to 'this'.
-     *          You may configure 'FLAMES_MAT_SCALAR_TIMES_UNROLL_FACTOR'
-     *          or 'FLAMES_UNROLL_FACTOR' to doing multiplication in parallel.
+     *          You may configure `FLAMES_MAT_SCALAR_TIMES_UNROLL_FACTOR`
+     *          or `FLAMES_UNROLL_FACTOR` to doing multiplication in parallel.
      * @tparam M The matrix type.
      * @tparam _unused (unused)
      * @tparam ScalarT The scalar type.
@@ -1803,8 +1808,8 @@ public:
      * @brief Matrix times ap_int integer.
      *
      * @details The result is stored to 'this'.
-     *          You may configure 'FLAMES_MAT_SCALAR_TIMES_UNROLL_FACTOR'
-     *          or 'FLAMES_UNROLL_FACTOR' to doing multiplication in parallel.
+     *          You may configure `FLAMES_MAT_SCALAR_TIMES_UNROLL_FACTOR`
+     *          or `FLAMES_UNROLL_FACTOR` to doing multiplication in parallel.
      * @tparam M The matrix type.
      * @tparam _unused (unused)
      * @tparam AP_W ap_int W param.
@@ -1828,8 +1833,8 @@ public:
      * @brief Matrix times ap_fixed float.
      *
      * @details The result is stored to 'this'.
-     *          You may configure 'FLAMES_MAT_SCALAR_TIMES_UNROLL_FACTOR'
-     *          or 'FLAMES_UNROLL_FACTOR' to doing multiplication in parallel.
+     *          You may configure `FLAMES_MAT_SCALAR_TIMES_UNROLL_FACTOR`
+     *          or `FLAMES_UNROLL_FACTOR` to doing multiplication in parallel.
      * @tparam M The matrix type.
      * @tparam _unused (unused)
      * @tparam AP_W ap_fixed W param.
@@ -1858,8 +1863,8 @@ public:
      *
      * @details This scalar is C++ arithmetic types, like double and int.
      *          The result is stored to 'this'.
-     *          You may configure 'FLAMES_MAT_SCALAR_TIMES_UNROLL_FACTOR'
-     *          or 'FLAMES_UNROLL_FACTOR' to doing multiplication in parallel.
+     *          You may configure `FLAMES_MAT_SCALAR_TIMES_UNROLL_FACTOR`
+     *          or `FLAMES_UNROLL_FACTOR` to doing multiplication in parallel.
      * @tparam ScalarT The scalar type.
      * @param s The scalar.
      * @return (Mat&) The multiplication result (a reference to 'this').
@@ -1880,8 +1885,8 @@ public:
      * @brief Matrix self multiply a complex number.
      *
      * @details The result is stored to 'this'.
-     *          You may configure 'FLAMES_MAT_SCALAR_TIMES_UNROLL_FACTOR'
-     *          or 'FLAMES_UNROLL_FACTOR' to doing multiplication in parallel.
+     *          You may configure `FLAMES_MAT_SCALAR_TIMES_UNROLL_FACTOR`
+     *          or `FLAMES_UNROLL_FACTOR` to doing multiplication in parallel.
      * @tparam ScalarT The scalar type.
      * @param s The complex number.
      * @return (Mat&) The multiplication result (a reference to 'this').
@@ -1902,8 +1907,8 @@ public:
      * @brief Matrix self multiply ap_int integer.
      *
      * @details The result is stored to 'this'.
-     *          You may configure 'FLAMES_MAT_SCALAR_TIMES_UNROLL_FACTOR'
-     *          or 'FLAMES_UNROLL_FACTOR' to doing multiplication in parallel.
+     *          You may configure `FLAMES_MAT_SCALAR_TIMES_UNROLL_FACTOR`
+     *          or `FLAMES_UNROLL_FACTOR` to doing multiplication in parallel.
      * @tparam AP_W ap_int W param.
      * @param s The integer.
      * @return (Mat&) The multiplication result (a reference to 'this').
@@ -1922,8 +1927,8 @@ public:
      * @brief Matrix self multiply ap_fixed float.
      *
      * @details The result is stored to 'this'.
-     *          You may configure 'FLAMES_MAT_SCALAR_TIMES_UNROLL_FACTOR'
-     *          or 'FLAMES_UNROLL_FACTOR' to doing multiplication in parallel.
+     *          You may configure `FLAMES_MAT_SCALAR_TIMES_UNROLL_FACTOR`
+     *          or `FLAMES_UNROLL_FACTOR` to doing multiplication in parallel.
      * @tparam AP_W ap_int W param.
      * @tparam AP_I ap_int I param.
      * @tparam AP_Q ap_int Q param.
@@ -1946,8 +1951,8 @@ public:
      * @brief General matrix matrix multiplication.(Including SYM or NORMAL matrix times a SYM or NORMAL matrix )
      *
      * @details The result is stored to 'this'.
-     *          You may configure 'FLAMES_MAT_TIMES_UNROLL_FACTOR'
-     *          or 'FLAMES_UNROLL_FACTOR' to doing multiplication in parallel.
+     *          You may configure `FLAMES_MAT_TIMES_UNROLL_FACTOR`
+     *          or `FLAMES_UNROLL_FACTOR` to doing multiplication in parallel.
      *          (This is implemented of using systolic array.)
      * @tparam M1 The left matrix type.
      * @tparam _unused1 (unused)
@@ -2002,8 +2007,8 @@ public:
      * @brief Normal matrix or symmetric matrix times an anti-symmetric matrix.
      *
      * @details The result is stored to 'this'.
-     *          You may configure 'FLAMES_MAT_TIMES_UNROLL_FACTOR'
-     *          or 'FLAMES_UNROLL_FACTOR' to doing multiplication in parallel.
+     *          You may configure `FLAMES_MAT_TIMES_UNROLL_FACTOR`
+     *          or `FLAMES_UNROLL_FACTOR` to doing multiplication in parallel.
      * @tparam M1 The left matrix type.
      * @tparam _unused1 (unused)
      * @tparam M2 The right matrix type.
@@ -2049,8 +2054,8 @@ public:
      * @brief Normal matrix or symmetric matrix  times a diagonal matrix.
      *
      * @details The result is stored to 'this'.
-     *          You may configure 'FLAMES_MAT_TIMES_UNROLL_FACTOR'
-     *          or 'FLAMES_UNROLL_FACTOR' to doing multiplication in parallel.
+     *          You may configure `FLAMES_MAT_TIMES_UNROLL_FACTOR`
+     *          or `FLAMES_UNROLL_FACTOR` to doing multiplication in parallel.
      * @tparam M1 The left matrix type.
      * @tparam _unused1 (unused)
      * @tparam M2 The right matrix type.
@@ -2090,8 +2095,8 @@ public:
      * @brief Normal matrix or symmetric matrix times a scalar matrix.
      *
      * @details The result is stored to 'this'.
-     *          You may configure 'FLAMES_MAT_TIMES_UNROLL_FACTOR'
-     *          or 'FLAMES_UNROLL_FACTOR' to doing multiplication in parallel.
+     *          You may configure `FLAMES_MAT_TIMES_UNROLL_FACTOR`
+     *          or `FLAMES_UNROLL_FACTOR` to doing multiplication in parallel.
      * @tparam M1 The left matrix type.
      * @tparam _unused1 (unused)
      * @tparam M2 The right matrix type.
@@ -2131,8 +2136,8 @@ public:
      * @brief Normal matrix or symmetric matrix times a upper triangular matrix.
      *
      * @details The result is stored to 'this'.
-     *          You may configure 'FLAMES_MAT_TIMES_UNROLL_FACTOR'
-     *          or 'FLAMES_UNROLL_FACTOR' to doing multiplication in parallel.
+     *          You may configure `FLAMES_MAT_TIMES_UNROLL_FACTOR`
+     *          or `FLAMES_UNROLL_FACTOR` to doing multiplication in parallel.
      * @tparam M1 The left matrix type.
      * @tparam _unused1 (unused)
      * @tparam M2 The right matrix type.
@@ -2200,8 +2205,8 @@ public:
      * @brief Normal matrix or symmetric matrix times a lower triangular matrix.
      *
      * @details The result is stored to 'this'.
-     *          You may configure 'FLAMES_MAT_TIMES_UNROLL_FACTOR'
-     *          or 'FLAMES_UNROLL_FACTOR' to doing multiplication in parallel.
+     *          You may configure `FLAMES_MAT_TIMES_UNROLL_FACTOR`
+     *          or `FLAMES_UNROLL_FACTOR` to doing multiplication in parallel.
      * @tparam M1 The left matrix type.
      * @tparam _unused1 (unused)
      * @tparam M2 The right matrix type.
@@ -2269,8 +2274,8 @@ public:
      * @brief Normal matrix or symmetric matrix times a strict upper triangular matrix.
      *
      * @details The result is stored to 'this'.
-     *          You may configure 'FLAMES_MAT_TIMES_UNROLL_FACTOR'
-     *          or 'FLAMES_UNROLL_FACTOR' to doing multiplication in parallel.
+     *          You may configure `FLAMES_MAT_TIMES_UNROLL_FACTOR`
+     *          or `FLAMES_UNROLL_FACTOR` to doing multiplication in parallel.
      * @tparam M1 The left matrix type.
      * @tparam _unused1 (unused)
      * @tparam M2 The right matrix type.
@@ -2336,8 +2341,8 @@ public:
      * @brief Normal matrix or symmetric matrix times a strict lower triangular matrix.
      *
      * @details The result is stored to 'this'.
-     *          You may configure 'FLAMES_MAT_TIMES_UNROLL_FACTOR'
-     *          or 'FLAMES_UNROLL_FACTOR' to doing multiplication in parallel.
+     *          You may configure `FLAMES_MAT_TIMES_UNROLL_FACTOR`
+     *          or `FLAMES_UNROLL_FACTOR` to doing multiplication in parallel.
      * @tparam M1 The left matrix type.
      * @tparam _unused1 (unused)
      * @tparam M2 The right matrix type.
@@ -2402,8 +2407,8 @@ public:
      * @brief Diagonal matrix times a diagonal matrix.
      *
      * @details The result is stored to 'this'.
-     *          You may configure 'FLAMES_MAT_TIMES_UNROLL_FACTOR'
-     *          or 'FLAMES_UNROLL_FACTOR' to doing multiplication in parallel.
+     *          You may configure `FLAMES_MAT_TIMES_UNROLL_FACTOR`
+     *          or `FLAMES_UNROLL_FACTOR` to doing multiplication in parallel.
      * @tparam M1 The left matrix type.
      * @tparam _unused1 (unused)
      * @tparam M2 The right matrix type.
@@ -2439,8 +2444,8 @@ public:
      * @brief Diagonal matrix times a scalar matrix.
      *
      * @details The result is stored to 'this'.
-     *          You may configure 'FLAMES_MAT_TIMES_UNROLL_FACTOR'
-     *          or 'FLAMES_UNROLL_FACTOR' to doing multiplication in parallel.
+     *          You may configure `FLAMES_MAT_TIMES_UNROLL_FACTOR`
+     *          or `FLAMES_UNROLL_FACTOR` to doing multiplication in parallel.
      * @tparam M1 The left matrix type.
      * @tparam _unused1 (unused)
      * @tparam M2 The right matrix type.
@@ -2476,8 +2481,8 @@ public:
      * @brief Diagonal matrix times a upper triangle matrix.
      *
      * @details The result is stored to 'this'.
-     *          You may configure 'FLAMES_MAT_TIMES_UNROLL_FACTOR'
-     *          or 'FLAMES_UNROLL_FACTOR' to doing multiplication in parallel.
+     *          You may configure `FLAMES_MAT_TIMES_UNROLL_FACTOR`
+     *          or `FLAMES_UNROLL_FACTOR` to doing multiplication in parallel.
      * @tparam M1 The left matrix type.
      * @tparam _unused1 (unused)
      * @tparam M2 The right matrix type.
@@ -2522,8 +2527,8 @@ public:
      * @brief Diagonal matrix times a lower triangle matrix.
      *
      * @details The result is stored to 'this'.
-     *          You may configure 'FLAMES_MAT_TIMES_UNROLL_FACTOR'
-     *          or 'FLAMES_UNROLL_FACTOR' to doing multiplication in parallel.
+     *          You may configure `FLAMES_MAT_TIMES_UNROLL_FACTOR`
+     *          or `FLAMES_UNROLL_FACTOR` to doing multiplication in parallel.
      * @tparam M1 The left matrix type.
      * @tparam _unused1 (unused)
      * @tparam M2 The right matrix type.
@@ -2568,8 +2573,8 @@ public:
      * @brief Diagonal matrix times a strict upper triangle matrix.
      *
      * @details The result is stored to 'this'.
-     *          You may configure 'FLAMES_MAT_TIMES_UNROLL_FACTOR'
-     *          or 'FLAMES_UNROLL_FACTOR' to doing multiplication in parallel.
+     *          You may configure `FLAMES_MAT_TIMES_UNROLL_FACTOR`
+     *          or `FLAMES_UNROLL_FACTOR` to doing multiplication in parallel.
      * @tparam M1 The left matrix type.
      * @tparam _unused1 (unused)
      * @tparam M2 The right matrix type.
@@ -2614,8 +2619,8 @@ public:
      * @brief Diagonal matrix times a strict lower triangle matrix.
      *
      * @details The result is stored to 'this'.
-     *          You may configure 'FLAMES_MAT_TIMES_UNROLL_FACTOR'
-     *          or 'FLAMES_UNROLL_FACTOR' to doing multiplication in parallel.
+     *          You may configure `FLAMES_MAT_TIMES_UNROLL_FACTOR`
+     *          or `FLAMES_UNROLL_FACTOR` to doing multiplication in parallel.
      * @tparam M1 The left matrix type.
      * @tparam _unused1 (unused)
      * @tparam M2 The right matrix type.
@@ -2660,8 +2665,8 @@ public:
      * @brief Diagonal matrix times a normal matrix or a symmetric matrix.
      *
      * @details The result is stored to 'this'.
-     *          You may configure 'FLAMES_MAT_TIMES_UNROLL_FACTOR'
-     *          or 'FLAMES_UNROLL_FACTOR' to doing multiplication in parallel.
+     *          You may configure `FLAMES_MAT_TIMES_UNROLL_FACTOR`
+     *          or `FLAMES_UNROLL_FACTOR` to doing multiplication in parallel.
      * @tparam M1 The left matrix type.
      * @tparam _unused1 (unused)
      * @tparam M2 The right matrix type.
@@ -2701,8 +2706,8 @@ public:
      * @brief Diagonal matrix times an anti-symmetric matrix.
      *
      * @details The result is stored to 'this'.
-     *          You may configure 'FLAMES_MAT_TIMES_UNROLL_FACTOR'
-     *          or 'FLAMES_UNROLL_FACTOR' to doing multiplication in parallel.
+     *          You may configure `FLAMES_MAT_TIMES_UNROLL_FACTOR`
+     *          or `FLAMES_UNROLL_FACTOR` to doing multiplication in parallel.
      * @tparam M1 The left matrix type.
      * @tparam _unused1 (unused)
      * @tparam M2 The right matrix type.
@@ -2774,8 +2779,8 @@ public:
      * @brief  Scalar matrix times a diagonal matrix.
      *
      * @details The result is stored to 'this'.
-     *          You may configure 'FLAMES_MAT_TIMES_UNROLL_FACTOR'
-     *          or 'FLAMES_UNROLL_FACTOR' to doing multiplication in parallel.
+     *          You may configure `FLAMES_MAT_TIMES_UNROLL_FACTOR`
+     *          or `FLAMES_UNROLL_FACTOR` to doing multiplication in parallel.
      * @tparam M1 The left matrix type.
      * @tparam _unused1 (unused)
      * @tparam M2 The right matrix type.
@@ -2811,8 +2816,8 @@ public:
      * @brief  Scalar matrix times a upper triangle matrix.
      *
      * @details The result is stored to 'this'.
-     *          You may configure 'FLAMES_MAT_TIMES_UNROLL_FACTOR'
-     *          or 'FLAMES_UNROLL_FACTOR' to doing multiplication in parallel.
+     *          You may configure `FLAMES_MAT_TIMES_UNROLL_FACTOR`
+     *          or `FLAMES_UNROLL_FACTOR` to doing multiplication in parallel.
      * @tparam M1 The left matrix type.
      * @tparam _unused1 (unused)
      * @tparam M2 The right matrix type.
@@ -2848,8 +2853,8 @@ public:
      * @brief  Scalar matrix times a lower triangle matrix.
      *
      * @details The result is stored to 'this'.
-     *          You may configure 'FLAMES_MAT_TIMES_UNROLL_FACTOR'
-     *          or 'FLAMES_UNROLL_FACTOR' to doing multiplication in parallel.
+     *          You may configure `FLAMES_MAT_TIMES_UNROLL_FACTOR`
+     *          or `FLAMES_UNROLL_FACTOR` to doing multiplication in parallel.
      * @tparam M1 The left matrix type.
      * @tparam _unused1 (unused)
      * @tparam M2 The right matrix type.
@@ -2885,8 +2890,8 @@ public:
      * @brief  Scalar matrix times a strict upper triangle matrix.
      *
      * @details The result is stored to 'this'.
-     *          You may configure 'FLAMES_MAT_TIMES_UNROLL_FACTOR'
-     *          or 'FLAMES_UNROLL_FACTOR' to doing multiplication in parallel.
+     *          You may configure `FLAMES_MAT_TIMES_UNROLL_FACTOR`
+     *          or `FLAMES_UNROLL_FACTOR` to doing multiplication in parallel.
      * @tparam M1 The left matrix type.
      * @tparam _unused1 (unused)
      * @tparam M2 The right matrix type.
@@ -2922,8 +2927,8 @@ public:
      * @brief  Scalar matrix times a strict lower triangle matrix.
      *
      * @details The result is stored to 'this'.
-     *          You may configure 'FLAMES_MAT_TIMES_UNROLL_FACTOR'
-     *          or 'FLAMES_UNROLL_FACTOR' to doing multiplication in parallel.
+     *          You may configure `FLAMES_MAT_TIMES_UNROLL_FACTOR`
+     *          or `FLAMES_UNROLL_FACTOR` to doing multiplication in parallel.
      * @tparam M1 The left matrix type.
      * @tparam _unused1 (unused)
      * @tparam M2 The right matrix type.
@@ -2959,8 +2964,8 @@ public:
      * @brief  Scalar matrix times an anti-symmetric matrix.
      *
      * @details The result is stored to 'this'.
-     *          You may configure 'FLAMES_MAT_TIMES_UNROLL_FACTOR'
-     *          or 'FLAMES_UNROLL_FACTOR' to doing multiplication in parallel.
+     *          You may configure `FLAMES_MAT_TIMES_UNROLL_FACTOR`
+     *          or `FLAMES_UNROLL_FACTOR` to doing multiplication in parallel.
      * @tparam M1 The left matrix type.
      * @tparam _unused1 (unused)
      * @tparam M2 The right matrix type.
@@ -3000,8 +3005,8 @@ public:
      * @brief  Scalar matrix times a normal matrix or a symmetric matrix.
      *
      * @details The result is stored to 'this'.
-     *          You may configure 'FLAMES_MAT_TIMES_UNROLL_FACTOR'
-     *          or 'FLAMES_UNROLL_FACTOR' to doing multiplication in parallel.
+     *          You may configure `FLAMES_MAT_TIMES_UNROLL_FACTOR`
+     *          or `FLAMES_UNROLL_FACTOR` to doing multiplication in parallel.
      * @tparam M1 The left matrix type.
      * @tparam _unused1 (unused)
      * @tparam M2 The right matrix type.
@@ -3040,8 +3045,8 @@ public:
      * @brief  Upper triangle matrix times a scalar matrix.
      *
      * @details The result is stored to 'this'.
-     *          You may configure 'FLAMES_MAT_TIMES_UNROLL_FACTOR'
-     *          or 'FLAMES_UNROLL_FACTOR' to doing multiplication in parallel.
+     *          You may configure `FLAMES_MAT_TIMES_UNROLL_FACTOR`
+     *          or `FLAMES_UNROLL_FACTOR` to doing multiplication in parallel.
      * @tparam M1 The left matrix type.
      * @tparam _unused1 (unused)
      * @tparam M2 The right matrix type.
@@ -3077,8 +3082,8 @@ public:
      * @brief  Upper triangle matrix times a diagonal matrix.
      *
      * @details The result is stored to 'this'.
-     *          You may configure 'FLAMES_MAT_TIMES_UNROLL_FACTOR'
-     *          or 'FLAMES_UNROLL_FACTOR' to doing multiplication in parallel.
+     *          You may configure `FLAMES_MAT_TIMES_UNROLL_FACTOR`
+     *          or `FLAMES_UNROLL_FACTOR` to doing multiplication in parallel.
      * @tparam M1 The left matrix type.
      * @tparam _unused1 (unused)
      * @tparam M2 The right matrix type.
@@ -3120,8 +3125,8 @@ public:
      * @brief  Upper triangle matrix times a upper triangle matrix.
      *
      * @details The result is stored to 'this'.
-     *          You may configure 'FLAMES_MAT_TIMES_UNROLL_FACTOR'
-     *          or 'FLAMES_UNROLL_FACTOR' to doing multiplication in parallel.
+     *          You may configure `FLAMES_MAT_TIMES_UNROLL_FACTOR`
+     *          or `FLAMES_UNROLL_FACTOR` to doing multiplication in parallel.
      * @tparam M1 The left matrix type.
      * @tparam _unused1 (unused)
      * @tparam M2 The right matrix type.
@@ -3174,8 +3179,8 @@ public:
      * @brief  Upper triangle matrix times a lower triangle matrix.
      *
      * @details The result is stored to 'this'.
-     *          You may configure 'FLAMES_MAT_TIMES_UNROLL_FACTOR'
-     *          or 'FLAMES_UNROLL_FACTOR' to doing multiplication in parallel.
+     *          You may configure `FLAMES_MAT_TIMES_UNROLL_FACTOR`
+     *          or `FLAMES_UNROLL_FACTOR` to doing multiplication in parallel.
      * @tparam M1 The left matrix type.
      * @tparam _unused1 (unused)
      * @tparam M2 The right matrix type.
@@ -3231,8 +3236,8 @@ public:
      * @brief  Upper triangle matrix times a strict upper triangle matrix.
      *
      * @details The result is stored to 'this'.
-     *          You may configure 'FLAMES_MAT_TIMES_UNROLL_FACTOR'
-     *          or 'FLAMES_UNROLL_FACTOR' to doing multiplication in parallel.
+     *          You may configure `FLAMES_MAT_TIMES_UNROLL_FACTOR`
+     *          or `FLAMES_UNROLL_FACTOR` to doing multiplication in parallel.
      * @tparam M1 The left matrix type.
      * @tparam _unused1 (unused)
      * @tparam M2 The right matrix type.
@@ -3285,8 +3290,8 @@ public:
      * @brief  Upper triangle matrix times a strict lower triangle matrix.
      *
      * @details The result is stored to 'this'.
-     *          You may configure 'FLAMES_MAT_TIMES_UNROLL_FACTOR'
-     *          or 'FLAMES_UNROLL_FACTOR' to doing multiplication in parallel.
+     *          You may configure `FLAMES_MAT_TIMES_UNROLL_FACTOR`
+     *          or `FLAMES_UNROLL_FACTOR` to doing multiplication in parallel.
      * @tparam M1 The left matrix type.
      * @tparam _unused1 (unused)
      * @tparam M2 The right matrix type.
@@ -3345,8 +3350,8 @@ public:
      * @brief  Upper triangle matrix times an anti-symmetric matrix.
      *
      * @details The result is stored to 'this'.
-     *          You may configure 'FLAMES_MAT_TIMES_UNROLL_FACTOR'
-     *          or 'FLAMES_UNROLL_FACTOR' to doing multiplication in parallel.
+     *          You may configure `FLAMES_MAT_TIMES_UNROLL_FACTOR`
+     *          or `FLAMES_UNROLL_FACTOR` to doing multiplication in parallel.
      * @tparam M1 The left matrix type.
      * @tparam _unused1 (unused)
      * @tparam M2 The right matrix type.
@@ -3414,8 +3419,8 @@ public:
      * @brief  Upper triangle matrix times a normal matrix or a symmetric matrix.
      *
      * @details The result is stored to 'this'.
-     *          You may configure 'FLAMES_MAT_TIMES_UNROLL_FACTOR'
-     *          or 'FLAMES_UNROLL_FACTOR' to doing multiplication in parallel.
+     *          You may configure `FLAMES_MAT_TIMES_UNROLL_FACTOR`
+     *          or `FLAMES_UNROLL_FACTOR` to doing multiplication in parallel.
      * @tparam M1 The left matrix type.
      * @tparam _unused1 (unused)
      * @tparam M2 The right matrix type.
@@ -3484,8 +3489,8 @@ public:
      * @brief  Lower triangle matrix times a scalar matrix.
      *
      * @details The result is stored to 'this'.
-     *          You may configure 'FLAMES_MAT_TIMES_UNROLL_FACTOR'
-     *          or 'FLAMES_UNROLL_FACTOR' to doing multiplication in parallel.
+     *          You may configure `FLAMES_MAT_TIMES_UNROLL_FACTOR`
+     *          or `FLAMES_UNROLL_FACTOR` to doing multiplication in parallel.
      * @tparam M1 The left matrix type.
      * @tparam _unused1 (unused)
      * @tparam M2 The right matrix type.
@@ -3521,8 +3526,8 @@ public:
      * @brief  Lower triangle matrix times a diagonal matrix.
      *
      * @details The result is stored to 'this'.
-     *          You may configure 'FLAMES_MAT_TIMES_UNROLL_FACTOR'
-     *          or 'FLAMES_UNROLL_FACTOR' to doing multiplication in parallel.
+     *          You may configure `FLAMES_MAT_TIMES_UNROLL_FACTOR`
+     *          or `FLAMES_UNROLL_FACTOR` to doing multiplication in parallel.
      * @tparam M1 The left matrix type.
      * @tparam _unused1 (unused)
      * @tparam M2 The right matrix type.
@@ -3567,8 +3572,8 @@ public:
      * @brief  Lower triangle matrix times a upper triangle matrix.
      *
      * @details The result is stored to 'this'.
-     *          You may configure 'FLAMES_MAT_TIMES_UNROLL_FACTOR'
-     *          or 'FLAMES_UNROLL_FACTOR' to doing multiplication in parallel.
+     *          You may configure `FLAMES_MAT_TIMES_UNROLL_FACTOR`
+     *          or `FLAMES_UNROLL_FACTOR` to doing multiplication in parallel.
      * @tparam M1 The left matrix type.
      * @tparam _unused1 (unused)
      * @tparam M2 The right matrix type.
@@ -3630,8 +3635,8 @@ public:
      * @brief  Lower triangle matrix times a lower triangle matrix.
      *
      * @details The result is stored to 'this'.
-     *          You may configure 'FLAMES_MAT_TIMES_UNROLL_FACTOR'
-     *          or 'FLAMES_UNROLL_FACTOR' to doing multiplication in parallel.
+     *          You may configure `FLAMES_MAT_TIMES_UNROLL_FACTOR`
+     *          or `FLAMES_UNROLL_FACTOR` to doing multiplication in parallel.
      * @tparam M1 The left matrix type.
      * @tparam _unused1 (unused)
      * @tparam M2 The right matrix type.
@@ -3687,8 +3692,8 @@ public:
      * @brief  Lower triangle matrix times a strict upper triangle matrix.
      *
      * @details The result is stored to 'this'.
-     *          You may configure 'FLAMES_MAT_TIMES_UNROLL_FACTOR'
-     *          or 'FLAMES_UNROLL_FACTOR' to doing multiplication in parallel.
+     *          You may configure `FLAMES_MAT_TIMES_UNROLL_FACTOR`
+     *          or `FLAMES_UNROLL_FACTOR` to doing multiplication in parallel.
      * @tparam M1 The left matrix type.bb
      * @tparam _unused1 (unused)
      * @tparam M2 The right matrix type.
@@ -3748,8 +3753,8 @@ public:
      * @brief  Lower triangle matrix times a strict lower triangle matrix.
      *
      * @details The result is stored to 'this'.
-     *          You may configure 'FLAMES_MAT_TIMES_UNROLL_FACTOR'
-     *          or 'FLAMES_UNROLL_FACTOR' to doing multiplication in parallel.
+     *          You may configure `FLAMES_MAT_TIMES_UNROLL_FACTOR`
+     *          or `FLAMES_UNROLL_FACTOR` to doing multiplication in parallel.
      * @tparam M1 The left matrix type.
      * @tparam _unused1 (unused)
      * @tparam M2 The right matrix type.
@@ -3803,8 +3808,8 @@ public:
      * @brief  Lower triangle matrix times an anti-symmetric matrix.
      *
      * @details The result is stored to 'this'.
-     *          You may configure 'FLAMES_MAT_TIMES_UNROLL_FACTOR'
-     *          or 'FLAMES_UNROLL_FACTOR' to doing multiplication in parallel.
+     *          You may configure `FLAMES_MAT_TIMES_UNROLL_FACTOR`
+     *          or `FLAMES_UNROLL_FACTOR` to doing multiplication in parallel.
      * @tparam M1 The left matrix type.
      * @tparam _unused1 (unused)
      * @tparam M2 The right matrix type.
@@ -3872,8 +3877,8 @@ public:
      * @brief  Lower triangle matrix times a normal matrix or a symmetric matrix.
      *
      * @details The result is stored to 'this'.
-     *          You may configure 'FLAMES_MAT_TIMES_UNROLL_FACTOR'
-     *          or 'FLAMES_UNROLL_FACTOR' to doing multiplication in parallel.
+     *          You may configure `FLAMES_MAT_TIMES_UNROLL_FACTOR`
+     *          or `FLAMES_UNROLL_FACTOR` to doing multiplication in parallel.
      * @tparam M1 The left matrix type.
      * @tparam _unused1 (unused)
      * @tparam M2 The right matrix type.
@@ -3942,8 +3947,8 @@ public:
      * @brief  Strict upper triangle matrix times a scalar matrix.
      *
      * @details The result is stored to 'this'.
-     *          You may configure 'FLAMES_MAT_TIMES_UNROLL_FACTOR'
-     *          or 'FLAMES_UNROLL_FACTOR' to doing multiplication in parallel.
+     *          You may configure `FLAMES_MAT_TIMES_UNROLL_FACTOR`
+     *          or `FLAMES_UNROLL_FACTOR` to doing multiplication in parallel.
      * @tparam M1 The left matrix type.
      * @tparam _unused1 (unused)
      * @tparam M2 The right matrix type.
@@ -3979,8 +3984,8 @@ public:
      * @brief   Strict upper triangle matrix times a diagonal matrix.
      *
      * @details The result is stored to 'this'.
-     *          You may configure 'FLAMES_MAT_TIMES_UNROLL_FACTOR'
-     *          or 'FLAMES_UNROLL_FACTOR' to doing multiplication in parallel.
+     *          You may configure `FLAMES_MAT_TIMES_UNROLL_FACTOR`
+     *          or `FLAMES_UNROLL_FACTOR` to doing multiplication in parallel.
      * @tparam M1 The left matrix type.
      * @tparam _unused1 (unused)
      * @tparam M2 The right matrix type.
@@ -4025,8 +4030,8 @@ public:
      * @brief  Strict upper triangle matrix times a upper triangle matrix.
      *
      * @details The result is stored to 'this'.
-     *          You may configure 'FLAMES_MAT_TIMES_UNROLL_FACTOR'
-     *          or 'FLAMES_UNROLL_FACTOR' to doing multiplication in parallel.
+     *          You may configure `FLAMES_MAT_TIMES_UNROLL_FACTOR`
+     *          or `FLAMES_UNROLL_FACTOR` to doing multiplication in parallel.
      * @tparam M1 The left matrix type.
      * @tparam _unused1 (unused)
      * @tparam M2 The right matrix type.
@@ -4079,8 +4084,8 @@ public:
      * @brief   Strict upper triangle matrix times a lower triangle matrix.
      *
      * @details The result is stored to 'this'.
-     *          You may configure 'FLAMES_MAT_TIMES_UNROLL_FACTOR'
-     *          or 'FLAMES_UNROLL_FACTOR' to doing multiplication in parallel.
+     *          You may configure `FLAMES_MAT_TIMES_UNROLL_FACTOR`
+     *          or `FLAMES_UNROLL_FACTOR` to doing multiplication in parallel.
      * @tparam M1 The left matrix type.
      * @tparam _unused1 (unused)
      * @tparam M2 The right matrix type.
@@ -4141,8 +4146,8 @@ public:
      * @brief   Strict upper triangle matrix times a strict upper triangle matrix.
      *
      * @details The result is stored to 'this'.
-     *          You may configure 'FLAMES_MAT_TIMES_UNROLL_FACTOR'
-     *          or 'FLAMES_UNROLL_FACTOR' to doing multiplication in parallel.
+     *          You may configure `FLAMES_MAT_TIMES_UNROLL_FACTOR`
+     *          or `FLAMES_UNROLL_FACTOR` to doing multiplication in parallel.
      * @tparam M1 The left matrix type.
      * @tparam _unused1 (unused)
      * @tparam M2 The right matrix type.
@@ -4193,8 +4198,8 @@ public:
      * @brief  Strict upper triangle times a strict lower triangle matrix.
      *
      * @details The result is stored to 'this'.
-     *          You may configure 'FLAMES_MAT_TIMES_UNROLL_FACTOR'
-     *          or 'FLAMES_UNROLL_FACTOR' to doing multiplication in parallel.
+     *          You may configure `FLAMES_MAT_TIMES_UNROLL_FACTOR`
+     *          or `FLAMES_UNROLL_FACTOR` to doing multiplication in parallel.
      * @tparam M1 The left matrix type.
      * @tparam _unused1 (unused)
      * @tparam M2 The right matrix type.
@@ -4258,8 +4263,8 @@ public:
      * @brief  Strict upper triangle matrix times an anti-symmetric matrix.
      *
      * @details The result is stored to 'this'.
-     *          You may configure 'FLAMES_MAT_TIMES_UNROLL_FACTOR'
-     *          or 'FLAMES_UNROLL_FACTOR' to doing multiplication in parallel.
+     *          You may configure `FLAMES_MAT_TIMES_UNROLL_FACTOR`
+     *          or `FLAMES_UNROLL_FACTOR` to doing multiplication in parallel.
      * @tparam M1 The left matrix type.
      * @tparam _unused1 (unused)
      * @tparam M2 The right matrix type.
@@ -4326,8 +4331,8 @@ public:
      * @brief  Strict upper triangle matrix times a normal matrix or a symmetric matrix.
      *
      * @details The result is stored to 'this'.
-     *          You may configure 'FLAMES_MAT_TIMES_UNROLL_FACTOR'
-     *          or 'FLAMES_UNROLL_FACTOR' to doing multiplication in parallel.
+     *          You may configure `FLAMES_MAT_TIMES_UNROLL_FACTOR`
+     *          or `FLAMES_UNROLL_FACTOR` to doing multiplication in parallel.
      * @tparam M1 The left matrix type.
      * @tparam _unused1 (unused)
      * @tparam M2 The right matrix type.
@@ -4394,8 +4399,8 @@ public:
      * @brief  Strict lower triangle matrix times a scalar matrix.
      *
      * @details The result is stored to 'this'.
-     *          You may configure 'FLAMES_MAT_TIMES_UNROLL_FACTOR'
-     *          or 'FLAMES_UNROLL_FACTOR' to doing multiplication in parallel.
+     *          You may configure `FLAMES_MAT_TIMES_UNROLL_FACTOR`
+     *          or `FLAMES_UNROLL_FACTOR` to doing multiplication in parallel.
      * @tparam M1 The left matrix type.
      * @tparam _unused1 (unused)
      * @tparam M2 The right matrix type.
@@ -4431,8 +4436,8 @@ public:
      * @brief  Strict lower triangle matrix times a diagonal matrix.
      *
      * @details The result is stored to 'this'.
-     *          You may configure 'FLAMES_MAT_TIMES_UNROLL_FACTOR'
-     *          or 'FLAMES_UNROLL_FACTOR' to doing multiplication in parallel.
+     *          You may configure `FLAMES_MAT_TIMES_UNROLL_FACTOR`
+     *          or `FLAMES_UNROLL_FACTOR` to doing multiplication in parallel.
      * @tparam M1 The left matrix type.
      * @tparam _unused1 (unused)
      * @tparam M2 The right matrix type.
@@ -4477,8 +4482,8 @@ public:
      * @brief  Strict lower triangle matrix times a upper triangle matrix.
      *
      * @details The result is stored to 'this'.
-     *          You may configure 'FLAMES_MAT_TIMES_UNROLL_FACTOR'
-     *          or 'FLAMES_UNROLL_FACTOR' to doing multiplication in parallel.
+     *          You may configure `FLAMES_MAT_TIMES_UNROLL_FACTOR`
+     *          or `FLAMES_UNROLL_FACTOR` to doing multiplication in parallel.
      * @tparam M1 The left matrix type.
      * @tparam _unused1 (unused)
      * @tparam M2 The right matrix type.
@@ -4539,8 +4544,8 @@ public:
      * @brief  Strict lower triangle matrix times a lower triangle matrix.
      *
      * @details The result is stored to 'this'.
-     *          You may configure 'FLAMES_MAT_TIMES_UNROLL_FACTOR'
-     *          or 'FLAMES_UNROLL_FACTOR' to doing multiplication in parallel.
+     *          You may configure `FLAMES_MAT_TIMES_UNROLL_FACTOR`
+     *          or `FLAMES_UNROLL_FACTOR` to doing multiplication in parallel.
      * @tparam M1 The left matrix type.
      * @tparam _unused1 (unused)
      * @tparam M2 The right matrix type.
@@ -4593,8 +4598,8 @@ public:
      * @brief  Strict lower triangle matrix times a strict upper triangle matrix.
      *
      * @details The result is stored to 'this'.
-     *          You may configure 'FLAMES_MAT_TIMES_UNROLL_FACTOR'
-     *          or 'FLAMES_UNROLL_FACTOR' to doing multiplication in parallel.
+     *          You may configure `FLAMES_MAT_TIMES_UNROLL_FACTOR`
+     *          or `FLAMES_UNROLL_FACTOR` to doing multiplication in parallel.
      * @tparam M1 The left matrix type.bb
      * @tparam _unused1 (unused)
      * @tparam M2 The right matrix type.
@@ -4655,8 +4660,8 @@ public:
      * @brief  Strict lower triangle matrix times a strict lower triangle matrix.
      *
      * @details The result is stored to 'this'.
-     *          You may configure 'FLAMES_MAT_TIMES_UNROLL_FACTOR'
-     *          or 'FLAMES_UNROLL_FACTOR' to doing multiplication in parallel.
+     *          You may configure `FLAMES_MAT_TIMES_UNROLL_FACTOR`
+     *          or `FLAMES_UNROLL_FACTOR` to doing multiplication in parallel.
      * @tparam M1 The left matrix type.
      * @tparam _unused1 (unused)
      * @tparam M2 The right matrix type.
@@ -4709,8 +4714,8 @@ public:
      * @brief  Strict lower triangle matrix times an anti-symmetric matrix.
      *
      * @details The result is stored to 'this'.
-     *          You may configure 'FLAMES_MAT_TIMES_UNROLL_FACTOR'
-     *          or 'FLAMES_UNROLL_FACTOR' to doing multiplication in parallel.
+     *          You may configure `FLAMES_MAT_TIMES_UNROLL_FACTOR`
+     *          or `FLAMES_UNROLL_FACTOR` to doing multiplication in parallel.
      * @tparam M1 The left matrix type.
      * @tparam _unused1 (unused)
      * @tparam M2 The right matrix type.
@@ -4776,8 +4781,8 @@ public:
      * @brief  Strict lower triangle matrix times a normal matrix or a symmetric matrix.
      *
      * @details The result is stored to 'this'.
-     *          You may configure 'FLAMES_MAT_TIMES_UNROLL_FACTOR'
-     *          or 'FLAMES_UNROLL_FACTOR' to doing multiplication in parallel.
+     *          You may configure `FLAMES_MAT_TIMES_UNROLL_FACTOR`
+     *          or `FLAMES_UNROLL_FACTOR` to doing multiplication in parallel.
      * @tparam M1 The left matrix type.
      * @tparam _unused1 (unused)
      * @tparam M2 The right matrix type.
@@ -4844,8 +4849,8 @@ public:
      * @brief Anti-symmetric matrix  times a diagonal matrix.
      *
      * @details The result is stored to 'this'.
-     *          You may configure 'FLAMES_MAT_TIMES_UNROLL_FACTOR'
-     *          or 'FLAMES_UNROLL_FACTOR' to doing multiplication in parallel.
+     *          You may configure `FLAMES_MAT_TIMES_UNROLL_FACTOR`
+     *          or `FLAMES_UNROLL_FACTOR` to doing multiplication in parallel.
      * @tparam M1 The left matrix type.
      * @tparam _unused1 (unused)
      * @tparam M2 The right matrix type.
@@ -4885,8 +4890,8 @@ public:
      * @brief Anti-symmetric matrix times a scalar matrix.
      *
      * @details The result is stored to 'this'.
-     *          You may configure 'FLAMES_MAT_TIMES_UNROLL_FACTOR'
-     *          or 'FLAMES_UNROLL_FACTOR' to doing multiplication in parallel.
+     *          You may configure `FLAMES_MAT_TIMES_UNROLL_FACTOR`
+     *          or `FLAMES_UNROLL_FACTOR` to doing multiplication in parallel.
      * @tparam M1 The left matrix type.
      * @tparam _unused1 (unused)
      * @tparam M2 The right matrix type.
@@ -4925,8 +4930,8 @@ public:
      * @brief Anti-symmetric times a upper triangular matrix.
      *
      * @details The result is stored to 'this'.
-     *          You may configure 'FLAMES_MAT_TIMES_UNROLL_FACTOR'
-     *          or 'FLAMES_UNROLL_FACTOR' to doing multiplication in parallel.
+     *          You may configure `FLAMES_MAT_TIMES_UNROLL_FACTOR`
+     *          or `FLAMES_UNROLL_FACTOR` to doing multiplication in parallel.
      * @tparam M1 The left matrix type.
      * @tparam _unused1 (unused)
      * @tparam M2 The right matrix type.
@@ -4993,8 +4998,8 @@ public:
      * @brief Anti-symmetric matrix times a lower triangular matrix.
      *
      * @details The result is stored to 'this'.
-     *          You may configure 'FLAMES_MAT_TIMES_UNROLL_FACTOR'
-     *          or 'FLAMES_UNROLL_FACTOR' to doing multiplication in parallel.
+     *          You may configure `FLAMES_MAT_TIMES_UNROLL_FACTOR`
+     *          or `FLAMES_UNROLL_FACTOR` to doing multiplication in parallel.
      * @tparam M1 The left matrix type.
      * @tparam _unused1 (unused)
      * @tparam M2 The right matrix type.
@@ -5061,8 +5066,8 @@ public:
      * @brief Anti-symmetric matrix times a strict upper triangular matrix.
      *
      * @details The result is stored to 'this'.
-     *          You may configure 'FLAMES_MAT_TIMES_UNROLL_FACTOR'
-     *          or 'FLAMES_UNROLL_FACTOR' to doing multiplication in parallel.
+     *          You may configure `FLAMES_MAT_TIMES_UNROLL_FACTOR`
+     *          or `FLAMES_UNROLL_FACTOR` to doing multiplication in parallel.
      * @tparam M1 The left matrix type.
      * @tparam _unused1 (unused)
      * @tparam M2 The right matrix type.
@@ -5128,8 +5133,8 @@ public:
      * @brief Anti-symmetric matrix times a strict lower triangular matrix.
      *
      * @details The result is stored to 'this'.
-     *          You may configure 'FLAMES_MAT_TIMES_UNROLL_FACTOR'
-     *          or 'FLAMES_UNROLL_FACTOR' to doing multiplication in parallel.
+     *          You may configure `FLAMES_MAT_TIMES_UNROLL_FACTOR`
+     *          or `FLAMES_UNROLL_FACTOR` to doing multiplication in parallel.
      * @tparam M1 The left matrix type.
      * @tparam _unused1 (unused)
      * @tparam M2 The right matrix type.
@@ -5195,8 +5200,8 @@ public:
      * @brief Anti-symmetric matrix times a normal matrix or a symmetric matrix.
      *
      * @details The result is stored to 'this'.
-     *          You may configure 'FLAMES_MAT_TIMES_UNROLL_FACTOR'
-     *          or 'FLAMES_UNROLL_FACTOR' to doing multiplication in parallel.
+     *          You may configure `FLAMES_MAT_TIMES_UNROLL_FACTOR`
+     *          or `FLAMES_UNROLL_FACTOR` to doing multiplication in parallel.
      *          (This is implemented of using systolic array.)
      * @tparam M1 The left matrix type.
      * @tparam _unused1 (unused)
@@ -5243,8 +5248,8 @@ public:
      * @brief Anti-symmetric matrix times an anti-symmetric matrix.
      *
      * @details The result is stored to 'this'.
-     *          You may configure 'FLAMES_MAT_TIMES_UNROLL_FACTOR'
-     *          or 'FLAMES_UNROLL_FACTOR' to doing multiplication in parallel.
+     *          You may configure `FLAMES_MAT_TIMES_UNROLL_FACTOR`
+     *          or `FLAMES_UNROLL_FACTOR` to doing multiplication in parallel.
      * @tparam M1 The left matrix type.
      * @tparam _unused1 (unused)
      * @tparam M2 The right matrix type.
@@ -5289,8 +5294,8 @@ public:
      * @brief Bool matrix times a matrix.
      *
      * @details The result is stored to 'this'.
-     *          You may configure 'FLAMES_MAT_TIMES_UNROLL_FACTOR'
-     *          or 'FLAMES_UNROLL_FACTOR' to doing multiplication in parallel.
+     *          You may configure `FLAMES_MAT_TIMES_UNROLL_FACTOR`
+     *          or `FLAMES_UNROLL_FACTOR` to doing multiplication in parallel.
      *          (This is implemented of using systolic array.)
      * @tparam M1 The left matrix type.
      * @tparam _unused1 (unused)
@@ -5339,8 +5344,8 @@ public:
      * @brief  Matrix times a bool matrix.
      *
      * @details The result is stored to 'this'.
-     *          You may configure 'FLAMES_MAT_TIMES_UNROLL_FACTOR'
-     *          or 'FLAMES_UNROLL_FACTOR' to doing multiplication in parallel.
+     *          You may configure `FLAMES_MAT_TIMES_UNROLL_FACTOR`
+     *          or `FLAMES_UNROLL_FACTOR` to doing multiplication in parallel.
      *          (This is implemented of using systolic array.)
      * @tparam M1 The left matrix type.
      * @tparam _unused1 (unused)
@@ -5388,10 +5393,10 @@ public:
     }
 
     /**
-     * @brief Dot product of two matrices.
+     * @brief Element-wise product of two matrices.
      *
-     * @details You can configure the macro 'FLAMES_MAT_DOT_UNROLL_FACTOR' to determine the parallelism.
-     * @note It now only supports dot product of two matrices of the same dimension and MatType.
+     * @details You can configure the macro `FLAMES_MAT_EMUL_UNROLL_FACTOR` to determine the parallelism.
+     * @note It now only supports element-wise product of two matrices of the same dimension and MatType.
      * @tparam M1 The left matrix type.
      * @tparam _unused1 (unused)
      * @tparam M2 The right matrix type.
@@ -5404,16 +5409,16 @@ public:
      * @tparam type2 The right matrix MatType.
      * @param mat_L The left matrix.
      * @param mat_R The right matrix.
-     * @return (Mat&) The dot product result (a reference to 'this').
+     * @return (Mat&) The element-wise product result (a reference to 'this').
      */
     template <template <class, size_t, size_t, MatType, class...> typename M1, typename... _unused1,
               template <class, size_t, size_t, MatType, class...> typename M2, typename... _unused2, typename T1,
               typename T2, size_t rows_, size_t cols_, MatType type1, MatType type2,
               std::enable_if_t<rows_ == n_rows && cols_ == n_cols && type1 == type && type2 == type, bool> = true>
-    Mat& dot(const M1<T1, rows_, cols_, type1, _unused1...>& mat_L,
-             const M2<T2, rows_, cols_, type2, _unused2...>& mat_R) {
+    Mat& emul(const M1<T1, rows_, cols_, type1, _unused1...>& mat_L,
+              const M2<T2, rows_, cols_, type2, _unused2...>& mat_R) {
         for (size_t i = 0; i != size(); ++i) {
-            FLAMES_PRAGMA(UNROLL factor = FLAMES_MAT_DOT_UNROLL_FACTOR)
+            FLAMES_PRAGMA(UNROLL factor = FLAMES_MAT_EMUL_UNROLL_FACTOR)
             _data[i] = mat_L[i] * mat_R[i];
         }
         return *this;
@@ -5424,8 +5429,8 @@ public:
      *
      * @details The result is stored to 'this'.
      *          You may configure macro
-     *          'FLAMES_MAT_COPY_UNROLL_FACTOR' or
-     *          'FLAMES_UNROLL_FACTOR' to do the operation in parallel.
+     *          `FLAMES_MAT_COPY_UNROLL_FACTOR` or
+     *          `FLAMES_UNROLL_FACTOR` to do the operation in parallel.
      * @tparam M The original matrix type.
      * @tparam _unused (unused)
      * @tparam T2 The original matrix element type.
@@ -5467,8 +5472,8 @@ public:
      *       Another choice is to use .col_() which creates a read only view,
      *       and this operation does not copy.
      * @details You may configure macro
-     *          'FLAMES_MAT_COPY_UNROLL_FACTOR' or
-     *          'FLAMES_UNROLL_FACTOR' to do the operation in parallel.
+     *          `FLAMES_MAT_COPY_UNROLL_FACTOR` or
+     *          `FLAMES_UNROLL_FACTOR` to do the operation in parallel.
      * @param c The column index.
      * @return (Mat<T, n_rows, 1, MatType::NORMAL>)(column vector) The certain column vector copy.
      */
@@ -5501,8 +5506,8 @@ public:
      *
      * @details The result is stored to 'this'.
      *          You may configure macro
-     *          'FLAMES_MAT_COPY_UNROLL_FACTOR' or
-     *          'FLAMES_UNROLL_FACTOR' to do the operation in parallel.
+     *          `FLAMES_MAT_COPY_UNROLL_FACTOR` or
+     *          `FLAMES_UNROLL_FACTOR` to do the operation in parallel.
      * @tparam M The original matrix type.
      * @tparam _unused (unused)
      * @tparam T2 The original matrix element type.
@@ -5532,8 +5537,8 @@ public:
      *       Another choice is to use .row_() which creates a read only view,
      *       and this operation does not copy.
      * @details You may configure macro
-     *          'FLAMES_MAT_COPY_UNROLL_FACTOR' or
-     *          'FLAMES_UNROLL_FACTOR' to do the operation in parallel.
+     *          `FLAMES_MAT_COPY_UNROLL_FACTOR` or
+     *          `FLAMES_UNROLL_FACTOR` to do the operation in parallel.
      * @param c The column index.
      * @return (Mat<T, 1, n_cols, MatType::NORMAL>)(row vector) The certain row vector copy.
      */
@@ -5566,8 +5571,8 @@ public:
      *
      * @details The result is stored to 'this'.
      *          You may configure macro
-     *          'FLAMES_MAT_COPY_UNROLL_FACTOR' or
-     *          'FLAMES_UNROLL_FACTOR' to do the operation in parallel.
+     *          `FLAMES_MAT_COPY_UNROLL_FACTOR` or
+     *          `FLAMES_UNROLL_FACTOR` to do the operation in parallel.
      * @tparam M The original matrix type.
      * @tparam _unused (unused)
      * @tparam T2 The original matrix element type.
@@ -5604,12 +5609,12 @@ public:
      *       Another choice is to use .cols_() which creates a read only view,
      *       and this operation does not copy.
      * @details You may configure macro
-     *          'FLAMES_MAT_COPY_UNROLL_FACTOR' or
-     *          'FLAMES_UNROLL_FACTOR' to do the operation in parallel.
+     *          `FLAMES_MAT_COPY_UNROLL_FACTOR` or
+     *          `FLAMES_UNROLL_FACTOR` to do the operation in parallel.
      * @details The result is stored to 'this'.
      *          You may configure macro
-     *          'FLAMES_MAT_COPY_UNROLL_FACTOR' or
-     *          'FLAMES_UNROLL_FACTOR' to do the operation in parallel.
+     *          `FLAMES_MAT_COPY_UNROLL_FACTOR` or
+     *          `FLAMES_UNROLL_FACTOR` to do the operation in parallel.
      * @tparam  _cols The number of columns taken.
      * @param first_col The first column index.
      * @return (Mat&) The successive columns(a normal matrix) (a reference to 'this') .
@@ -5656,8 +5661,8 @@ public:
      *
      * @details The result is stored to 'this'.
      *          You may configure macro
-     *          'FLAMES_MAT_COPY_UNROLL_FACTOR' or
-     *          'FLAMES_UNROLL_FACTOR' to do the operation in parallel.
+     *          `FLAMES_MAT_COPY_UNROLL_FACTOR` or
+     *          `FLAMES_UNROLL_FACTOR` to do the operation in parallel.
      * @tparam M The original matrix type.
      * @tparam _unused (unused)
      * @tparam T2 The original matrix element type.
@@ -5694,12 +5699,12 @@ public:
      *       Another choice is to use .rows_() which creates a read only view,
      *       and this operation does not copy.
      * @details You may configure macro
-     *          'FLAMES_MAT_COPY_UNROLL_FACTOR' or
-     *          'FLAMES_UNROLL_FACTOR' to do the operation in parallel.
+     *          `FLAMES_MAT_COPY_UNROLL_FACTOR` or
+     *          `FLAMES_UNROLL_FACTOR` to do the operation in parallel.
      * @details The result is stored to 'this'.
      *          You may configure macro
-     *          'FLAMES_MAT_COPY_UNROLL_FACTOR' or
-     *          'FLAMES_UNROLL_FACTOR' to do the operation in parallel.
+     *          `FLAMES_MAT_COPY_UNROLL_FACTOR` or
+     *          `FLAMES_UNROLL_FACTOR` to do the operation in parallel.
      * @tparam  _rows The number of columns taken.
      * @param first_row The first row index.
      * @return (Mat&) The successive rows(a normal matrix) (a reference to 'this') .
@@ -5746,8 +5751,8 @@ public:
      *
      * @details The result is stored to 'this'.
      *          You may configure macro
-     *          'FLAMES_MAT_COPY_UNROLL_FACTOR' or
-     *          'FLAMES_UNROLL_FACTOR' to do the operation in parallel.
+     *          `FLAMES_MAT_COPY_UNROLL_FACTOR` or
+     *          `FLAMES_UNROLL_FACTOR` to do the operation in parallel.
      * @tparam M1 The original matrix type.
      * @tparam _unused1 (unused)
      * @tparam M2 The vector type.
@@ -5786,12 +5791,12 @@ public:
      *       Another choice is to use .rows_() which creates a read only view,
      *       and this operation does not copy.
      * @details You may configure macro
-     *          'FLAMES_MAT_COPY_UNROLL_FACTOR' or
-     *          'FLAMES_UNROLL_FACTOR' to do the operation in parallel.
+     *          `FLAMES_MAT_COPY_UNROLL_FACTOR` or
+     *          `FLAMES_UNROLL_FACTOR` to do the operation in parallel.
      * @details The result is stored to 'this'.
      *          You may configure macro
-     *          'FLAMES_MAT_COPY_UNROLL_FACTOR' or
-     *          'FLAMES_UNROLL_FACTOR' to do the operation in parallel.
+     *          `FLAMES_MAT_COPY_UNROLL_FACTOR` or
+     *          `FLAMES_UNROLL_FACTOR` to do the operation in parallel.
      * @tparam M2 The vector type.
      * @param vector The vector.
      * @return (Mat&) The discrete rows(a normal matrix) (a reference to 'this') .
@@ -5830,8 +5835,8 @@ public:
      *
      * @details The result is stored to 'this'.
      *          You may configure macro
-     *          'FLAMES_MAT_COPY_UNROLL_FACTOR' or
-     *          'FLAMES_UNROLL_FACTOR' to do the operation in parallel.
+     *          `FLAMES_MAT_COPY_UNROLL_FACTOR` or
+     *          `FLAMES_UNROLL_FACTOR` to do the operation in parallel.
      * @tparam M1 The original matrix type.
      * @tparam _unused1 (unused)
      * @tparam M2 The vector type.
@@ -5870,12 +5875,12 @@ public:
      *       Another choice is to use .cols_() which creates a read only view,
      *       and this operation does not copy.
      * @details You may configure macro
-     *          'FLAMES_MAT_COPY_UNROLL_FACTOR' or
-     *          'FLAMES_UNROLL_FACTOR' to do the operation in parallel.
+     *          `FLAMES_MAT_COPY_UNROLL_FACTOR` or
+     *          `FLAMES_UNROLL_FACTOR` to do the operation in parallel.
      * @details The result is stored to 'this'.
      *          You may configure macro
-     *          'FLAMES_MAT_COPY_UNROLL_FACTOR' or
-     *          'FLAMES_UNROLL_FACTOR' to do the operation in parallel.
+     *          `FLAMES_MAT_COPY_UNROLL_FACTOR` or
+     *          `FLAMES_UNROLL_FACTOR` to do the operation in parallel.
      * @tparam M2 The vector type.
      * @param vector The vector.
      * @return (Mat&) The discrete cols(a normal matrix) (a reference to 'this') .
@@ -5928,8 +5933,8 @@ public:
      *
      * @details The result is stored to 'this'.
      *          You may configure macro
-     *          'FLAMES_MAT_TRANSPOSE_UNROLL_FACTOR' or
-     *          'FLAMES_UNROLL_FACTOR' to do transpose in parallel.
+     *          `FLAMES_MAT_TRANSPOSE_UNROLL_FACTOR` or
+     *          `FLAMES_UNROLL_FACTOR` to do transpose in parallel.
      * @tparam M The matrix type.
      * @tparam _unused (unused)
      * @tparam T2 The original matrix element type.
@@ -6006,8 +6011,8 @@ public:
      * @brief Transpose NORMAL matrix as a copy.
      *
      * @details You may configure macro
-     *          'FLAMES_MAT_TRANSPOSE_UNROLL_FACTOR' or
-     *          'FLAMES_UNROLL_FACTOR' to do transpose in parallel.
+     *          `FLAMES_MAT_TRANSPOSE_UNROLL_FACTOR` or
+     *          `FLAMES_UNROLL_FACTOR` to do transpose in parallel.
      * @note This function makes a copy,
      *       so if you want to optimize your design,
      *       always use .t(Mat) that takes an argument to avoid copy in place other than initialization.
@@ -6058,8 +6063,8 @@ public:
      * @brief Transpose UPPER matrix as a copy.
      *
      * @details You may configure macro
-     *          'FLAMES_MAT_TRANSPOSE_UNROLL_FACTOR' or
-     *          'FLAMES_UNROLL_FACTOR' to do transpose in parallel.
+     *          `FLAMES_MAT_TRANSPOSE_UNROLL_FACTOR` or
+     *          `FLAMES_UNROLL_FACTOR` to do transpose in parallel.
      * @note This function makes a copy,
      *       so if you want to optimize your design,
      *       always use .t(Mat) that takes an argument to avoid copy in place other than initialization.
@@ -6089,8 +6094,8 @@ public:
      * @brief Transpose LOWER matrix as a copy.
      *
      * @details You may configure macro
-     *          'FLAMES_MAT_TRANSPOSE_UNROLL_FACTOR' or
-     *          'FLAMES_UNROLL_FACTOR' to do transpose in parallel.
+     *          `FLAMES_MAT_TRANSPOSE_UNROLL_FACTOR` or
+     *          `FLAMES_UNROLL_FACTOR` to do transpose in parallel.
      * @note This function makes a copy,
      *       so if you want to optimize your design,
      *       always use .t(Mat) that takes an argument to avoid copy in place other than initialization.
@@ -6120,8 +6125,8 @@ public:
      * @brief Transpose SUPPER matrix as a copy.
      *
      * @details You may configure macro
-     *          'FLAMES_MAT_TRANSPOSE_UNROLL_FACTOR' or
-     *          'FLAMES_UNROLL_FACTOR' to do transpose in parallel.
+     *          `FLAMES_MAT_TRANSPOSE_UNROLL_FACTOR` or
+     *          `FLAMES_UNROLL_FACTOR` to do transpose in parallel.
      * @note This function makes a copy,
      *       so if you want to optimize your design,
      *       always use .t(Mat) that takes an argument to avoid copy in place other than initialization.
@@ -6151,8 +6156,8 @@ public:
      * @brief Transpose SLOWER matrix as a copy.
      *
      * @details You may configure macro
-     *          'FLAMES_MAT_TRANSPOSE_UNROLL_FACTOR' or
-     *          'FLAMES_UNROLL_FACTOR' to do transpose in parallel.
+     *          `FLAMES_MAT_TRANSPOSE_UNROLL_FACTOR` or
+     *          `FLAMES_UNROLL_FACTOR` to do transpose in parallel.
      * @note This function makes a copy,
      *       so if you want to optimize your design,
      *       always use .t(Mat) that takes an argument to avoid copy in place other than initialization.
@@ -6182,8 +6187,8 @@ public:
      * @brief Transpose ASYM matrix as a copy.
      *
      * @details You may configure macro
-     *          'FLAMES_MAT_TRANSPOSE_UNROLL_FACTOR' or
-     *          'FLAMES_UNROLL_FACTOR' to do transpose in parallel.
+     *          `FLAMES_MAT_TRANSPOSE_UNROLL_FACTOR` or
+     *          `FLAMES_UNROLL_FACTOR` to do transpose in parallel.
      * @note This function makes a copy,
      *       so if you want to optimize your design,
      *       always use .t(Mat) that takes an argument to avoid copy in place other than initialization.
@@ -6221,8 +6226,8 @@ public:
      *
      * @details The result is stored to 'this'.
      *          You may configure macro
-     *          'FLAMES_MAT_TRANSPOSE_UNROLL_FACTOR' or
-     *          'FLAMES_UNROLL_FACTOR' to do transpose in parallel.
+     *          `FLAMES_MAT_TRANSPOSE_UNROLL_FACTOR` or
+     *          `FLAMES_UNROLL_FACTOR` to do transpose in parallel.
      * @return (Mat&) The transposed result (a reference to 'this').
      */
     Mat& tSelf() {
@@ -6255,8 +6260,8 @@ public:
      *
      * @details The result is stored to 'this'.
      *          You may configure macro
-     *          'FLAMES_MAT_COPY_UNROLL_FACTOR' or
-     *          'FLAMES_UNROLL_FACTOR' to do the operation in parallel.
+     *          `FLAMES_MAT_COPY_UNROLL_FACTOR` or
+     *          `FLAMES_UNROLL_FACTOR` to do the operation in parallel.
      * @tparam M The original matrix type.
      * @tparam _unused (unused)
      * @tparam T2 The original matrix element type.
@@ -6283,8 +6288,8 @@ public:
      *       Another choice is to use .opp_() which creates a read only view,
      *       and this operation does not copy.
      * @details You may configure macro
-     *          'FLAMES_MAT_COPY_UNROLL_FACTOR' or
-     *          'FLAMES_UNROLL_FACTOR' to do the operation in parallel.
+     *          `FLAMES_MAT_COPY_UNROLL_FACTOR` or
+     *          `FLAMES_UNROLL_FACTOR` to do the operation in parallel.
      * @return (Mat) The opposite matrix copy.
      */
     Mat opp() const {
@@ -6312,8 +6317,8 @@ public:
      *
      * @details The result is stored to 'this'.
      *          You may configure macro
-     *          'FLAMES_MAT_COPY_UNROLL_FACTOR' or
-     *          'FLAMES_UNROLL_FACTOR' to do the operation in parallel.
+     *          `FLAMES_MAT_COPY_UNROLL_FACTOR` or
+     *          `FLAMES_UNROLL_FACTOR` to do the operation in parallel.
      * @return (Mat&) The opposite matrix (a reference to 'this').
      */
     Mat& oppSelf() {
@@ -6329,8 +6334,8 @@ public:
      *
      * @details The result is stored to 'this'.
      *          You may configure macro
-     *          'FLAMES_MAT_COPY_UNROLL_FACTOR' or
-     *          'FLAMES_UNROLL_FACTOR' to do the operation in parallel.
+     *          `FLAMES_MAT_COPY_UNROLL_FACTOR` or
+     *          `FLAMES_UNROLL_FACTOR` to do the operation in parallel.
      * @tparam M The original matrix type.
      * @tparam _unused (unused)
      * @tparam T2 The original matrix element type.
@@ -6358,8 +6363,8 @@ public:
      *       Another choice is to use .diagMat_() which creates a read only view,
      *       and this operation does not copy.
      * @details You may configure macro
-     *          'FLAMES_MAT_COPY_UNROLL_FACTOR' or
-     *          'FLAMES_UNROLL_FACTOR' to do the operation in parallel.
+     *          `FLAMES_MAT_COPY_UNROLL_FACTOR` or
+     *          `FLAMES_UNROLL_FACTOR` to do the operation in parallel.
      * @return (Mat<T, n_rows, n_cols, MatType::DIAGONAL>) The diagonal matrix copy.
      */
     Mat<T, n_rows, n_cols, MatType::DIAGONAL> diagMat() const {
@@ -6386,8 +6391,8 @@ public:
      *
      * @details The result is stored to 'this'.
      *          You may configure macro
-     *          'FLAMES_MAT_COPY_UNROLL_FACTOR' or
-     *          'FLAMES_UNROLL_FACTOR' to do the operation in parallel.
+     *          `FLAMES_MAT_COPY_UNROLL_FACTOR` or
+     *          `FLAMES_UNROLL_FACTOR` to do the operation in parallel.
      * @tparam M The original matrix type.
      * @tparam _unused (unused)
      * @tparam T2 The original matrix element type.
@@ -6415,8 +6420,8 @@ public:
      *       Another choice is to use .diagVec_() which creates a read only view,
      *       and this operation does not copy.
      * @details You may configure macro
-     *          'FLAMES_MAT_COPY_UNROLL_FACTOR' or
-     *          'FLAMES_UNROLL_FACTOR' to do the operation in parallel.
+     *          `FLAMES_MAT_COPY_UNROLL_FACTOR` or
+     *          `FLAMES_UNROLL_FACTOR` to do the operation in parallel.
      * @return (Vec<T, n_rows>) The diagonal vector copy.
      */
     Vec<T, n_rows> diagVec() const {
@@ -6444,8 +6449,8 @@ public:
      *
      * @details The result is stored to 'this'.
      *          You may configure macro
-     *          'FLAMES_MAT_COPY_UNROLL_FACTOR' or
-     *          'FLAMES_UNROLL_FACTOR' to do the operation in parallel.
+     *          `FLAMES_MAT_COPY_UNROLL_FACTOR` or
+     *          `FLAMES_UNROLL_FACTOR` to do the operation in parallel.
      * @tparam M The original matrix type.
      * @tparam _unused (unused)
      * @tparam T2 The original matrix element type.
@@ -6473,8 +6478,8 @@ public:
      *       Another choice is to use .diagRowVec_() which creates a read only view,
      *       and this operation does not copy.
      * @details You may configure macro
-     *          'FLAMES_MAT_COPY_UNROLL_FACTOR' or
-     *          'FLAMES_UNROLL_FACTOR' to do the operation in parallel.
+     *          `FLAMES_MAT_COPY_UNROLL_FACTOR` or
+     *          `FLAMES_UNROLL_FACTOR` to do the operation in parallel.
      * @return (RowVec<T, n_cols>) The diagonal row vector copy.
      */
     RowVec<T, n_cols> diagRowVec() const {
@@ -6502,8 +6507,8 @@ public:
      *
      * @details The result is stored to 'this'.
      *          You may configure macro
-     *          'FLAMES_MAT_COPY_UNROLL_FACTOR' or
-     *          'FLAMES_UNROLL_FACTOR' to do the operation in parallel.
+     *          `FLAMES_MAT_COPY_UNROLL_FACTOR` or
+     *          `FLAMES_UNROLL_FACTOR` to do the operation in parallel.
      * @tparam M The original matrix type.
      * @tparam _unused (unused)
      * @tparam T2 The original matrix element type.
@@ -6536,8 +6541,8 @@ public:
      *       Another choice is to use .offDiag_() which creates a read only view,
      *       and this operation does not copy.
      * @details You may configure macro
-     *          'FLAMES_MAT_COPY_UNROLL_FACTOR' or
-     *          'FLAMES_UNROLL_FACTOR' to do the operation in parallel.
+     *          `FLAMES_MAT_COPY_UNROLL_FACTOR` or
+     *          `FLAMES_UNROLL_FACTOR` to do the operation in parallel.
      * @return (Mat<T, n_rows, n_cols, MatType::NORMAL>) The off diagonal matrix copy.
      */
     Mat<T, n_rows, n_cols, MatType::NORMAL> offDiag() const {
@@ -6772,8 +6777,8 @@ public:
         return *this;
     }
 
-//   public: // original private
-public:
+    //   public: // original private
+  public:
     /**
      * @brief Get the raw data array pointer.
      *
@@ -7045,8 +7050,8 @@ public:
      * @brief The raw data array in row major.
      *
      * @details You can set the array partition using macro
-     *          'FLAMES_MAT_PARTITION_COMPLETE' to set a complete array partition
-     *          and 'FLAMES_MAT_PARTITION_FACTOR' to set a block partition with the specific factor.
+     *          `FLAMES_MAT_PARTITION_COMPLETE` to set a complete array partition
+     *          and `FLAMES_MAT_PARTITION_FACTOR` to set a block partition with the specific factor.
      *
      */
     T _data[type == MatType::NORMAL     ? n_rows * n_cols
@@ -7101,7 +7106,7 @@ class MatView {
         return *this;
     }
 
-    template<typename M>
+    template <typename M>
     void assign(M m) {
         for (size_t i = 0; i != size(); ++i) {
             FLAMES_PRAGMA(UNROLL factor = FLAMES_MAT_COPY_UNROLL_FACTOR)
@@ -7250,8 +7255,8 @@ class MatView {
      *
      * @details The result is stored to 'this'.
      *          You may configure macro
-     *          'FLAMES_MAT_COPY_UNROLL_FACTOR' or
-     *          'FLAMES_UNROLL_FACTOR' to do the operation in parallel.
+     *          `FLAMES_MAT_COPY_UNROLL_FACTOR` or
+     *          `FLAMES_UNROLL_FACTOR` to do the operation in parallel.
      * @tparam M The original matrix type.
      * @tparam _unused (unused)
      * @tparam T2 The original matrix element type.
@@ -7293,8 +7298,8 @@ class MatView {
      *       Another choice is to use .col_() which creates a read only view,
      *       and this operation does not copy.
      * @details You may configure macro
-     *          'FLAMES_MAT_COPY_UNROLL_FACTOR' or
-     *          'FLAMES_UNROLL_FACTOR' to do the operation in parallel.
+     *          `FLAMES_MAT_COPY_UNROLL_FACTOR` or
+     *          `FLAMES_UNROLL_FACTOR` to do the operation in parallel.
      * @param c The column index.
      * @return (Mat<T, n_rows, 1, MatType::NORMAL>)(column vector) The certain column vector copy.
      */
@@ -7333,9 +7338,7 @@ class MatView {
         return *this;
     }
 
-    MatViewT<T, n_cols, n_rows, type> t_() const {
-        return _data;
-    }
+    MatViewT<T, n_cols, n_rows, type> t_() const { return _data; }
 
     template <typename Tp = T>
     Tp power() const {
@@ -7378,8 +7381,8 @@ class MatView {
         return static_cast<Mat<T, n_rows, n_cols, type>>(*this);
     }
 
-//   public: // original private
-public:
+    //   public: // original private
+  public:
     T* const _data;
 };
 
@@ -7634,8 +7637,8 @@ class MatViewT {
         return static_cast<Mat<T, n_rows, n_cols, type>>(*this);
     }
 
-//   public: // original private
-public:
+    //   public: // original private
+  public:
     /**
      * @brief Raw data pointer.
      *
@@ -9028,9 +9031,8 @@ operator-(const M1<T1, n_rows, n_cols, type1, _unused1...>& mat_L,
 template <template <class, size_t, size_t, MatType, class...> typename M1, typename... _unused1,
           template <class, size_t, size_t, MatType, class...> typename M2, typename... _unused2, typename T1,
           typename T2, size_t n_rows, size_t n_cols, MatType type1, MatType type2>
-static inline M1<T1, n_rows, n_cols, type1>& operator-=(
-    M1<T1, n_rows, n_cols, type1, _unused1...>& mat_L,
-    const M2<T2, n_rows, n_cols, type2, _unused2...>& mat_R) {
+static inline M1<T1, n_rows, n_cols, type1>& operator-=(M1<T1, n_rows, n_cols, type1, _unused1...>& mat_L,
+                                                        const M2<T2, n_rows, n_cols, type2, _unused2...>& mat_R) {
     FLAMES_PRAGMA(INLINE)
     return mat_L.sub(mat_R);
 }
@@ -9039,8 +9041,8 @@ static inline M1<T1, n_rows, n_cols, type1>& operator-=(
  * @brief Matrix self times a matrix.
  *
  * @details This operator calls .mul() function.
- *          You may configure 'FLAMES_MAT_SCALAR_TIMES_UNROLL_FACTOR'
- *          or 'FLAMES_UNROLL_FACTOR' to doing multiplication in parallel.
+ *          You may configure `FLAMES_MAT_SCALAR_TIMES_UNROLL_FACTOR`
+ *          or `FLAMES_UNROLL_FACTOR` to doing multiplication in parallel.
  * @note This is the correct way to do self multiplication.\n
  *       The wrong way: \code a.mul(a, b); \endcode
  *       because this will lead to writing into the read only matrix,
@@ -9095,8 +9097,8 @@ operator*=(Mat<T1, n_rows, n_cols, type1>& mat, const M<T2, n_cols, n_cols, type
  *
  * @details This operator calls .mul() function.
  *          This scalar is C++ arithmetic types, like double and int.
- *          You may configure 'FLAMES_MAT_SCALAR_TIMES_UNROLL_FACTOR'
- *          or 'FLAMES_UNROLL_FACTOR' to doing multiplication in parallel.
+ *          You may configure `FLAMES_MAT_SCALAR_TIMES_UNROLL_FACTOR`
+ *          or `FLAMES_UNROLL_FACTOR` to doing multiplication in parallel.
  * @tparam M The matrix type.
  * @tparam _unused (unused)
  * @tparam ScalarT The scalar type.
@@ -9118,8 +9120,8 @@ static inline Mat<T, n_rows, n_cols, type>& operator*=(const M<T, n_rows, n_cols
  *
  * @details This operator calls .mul() function.
  *          This scalar is C++ arithmetic types, like double and int.
- *          You may configure 'FLAMES_MAT_SCALAR_TIMES_UNROLL_FACTOR'
- *          or 'FLAMES_UNROLL_FACTOR' to doing multiplication in parallel.
+ *          You may configure `FLAMES_MAT_SCALAR_TIMES_UNROLL_FACTOR`
+ *          or `FLAMES_UNROLL_FACTOR` to doing multiplication in parallel.
  * @note This function makes a copy so it should only by used for initialization.
  *       Otherwise use .mul(Mat_L, s) to avoid the copy operation.
  * @tparam M The matrix type.
@@ -9171,8 +9173,8 @@ static inline Mat<T, n_rows, n_cols, type> operator*(const M<T, n_rows, n_cols, 
  *
  * @details This operator calls .mul() function.
  *          This scalar is C++ arithmetic types, like double and int.
- *          You may configure 'FLAMES_MAT_SCALAR_TIMES_UNROLL_FACTOR'
- *          or 'FLAMES_UNROLL_FACTOR' to doing multiplication in parallel.
+ *          You may configure `FLAMES_MAT_SCALAR_TIMES_UNROLL_FACTOR`
+ *          or `FLAMES_UNROLL_FACTOR` to doing multiplication in parallel.
  * @note This function makes a copy so it should only by used for initialization.
  *       Otherwise use .mul(Mat_R, mat_s) to avoid the copy operation.
  * @tparam M The matrix type.
@@ -9223,8 +9225,8 @@ static inline Mat<T, n_rows, n_cols, type> operator*(ap_fixed<AP_W, AP_I, AP_Q, 
  * @brief Matrix multiplication.
  *
  * @details This operator calls .mul() function.
- *          You may configure 'FLAMES_MAT_SCALAR_TIMES_UNROLL_FACTOR'
- *          or 'FLAMES_UNROLL_FACTOR' to doing multiplication in parallel.
+ *          You may configure `FLAMES_MAT_SCALAR_TIMES_UNROLL_FACTOR`
+ *          or `FLAMES_UNROLL_FACTOR` to doing multiplication in parallel.
  * @note This function makes a copy so it should only by used for initialization.
  *       Otherwise use .mul(Mat_L, mat_R) to avoid the copy operation.
  * @tparam M1 The left matrix type.
@@ -9269,12 +9271,12 @@ operator*(const M1<T1, n_rows, comm, type1, _unused1...>& mat_L,
 }
 
 /**
- * @brief Dot product of two matrices.
+ * @brief Element-wise product of two matrices.
  *
- * @details You can configure the macro 'FLAMES_MAT_DOT_UNROLL_FACTOR' to determine the parallelism.\n
- *          This internally calls Mat::dot(mat, mat).\n
+ * @details You can configure the macro `FLAMES_MAT_EMUL_UNROLL_FACTOR` to determine the parallelism.\n
+ *          This internally calls Mat::emul(mat, mat).\n
  *          The return element type is that of the left matrix.
- * @note It now only supports dot product of two matrices of the same dimension and MatType.
+ * @note It now only supports element-wise product of two matrices of the same dimension and MatType.
  * @tparam M1 The left matrix type.
  * @tparam _unused1 (unused)
  * @tparam M2 The right matrix type.
@@ -9286,7 +9288,7 @@ operator*(const M1<T1, n_rows, comm, type1, _unused1...>& mat_L,
  * @tparam type The matrix MatType.
  * @param mat_L The left matrix.
  * @param mat_R The right matrix.
- * @return (Mat<T1, n_rows, n_cols, type>) The dot product result.
+ * @return (Mat<T1, n_rows, n_cols, type>) The element-wise product result.
  */
 template <template <class, size_t, size_t, MatType, class...> typename M1, typename... _unused1,
           template <class, size_t, size_t, MatType, class...> typename M2, typename... _unused2, typename T1,
@@ -9294,7 +9296,199 @@ template <template <class, size_t, size_t, MatType, class...> typename M1, typen
 Mat<T1, n_rows, n_cols, type> operator%(const M1<T1, n_rows, n_cols, type, _unused1...>& mat_L,
                                         const M2<T2, n_rows, n_cols, type, _unused2...>& mat_R) {
     Mat<T1, n_rows, n_cols, type> mat;
-    return mat.dot(mat_L, mat_R);
+    return mat.emul(mat_L, mat_R);
+}
+
+/**
+ * @brief Element-wise equal comparison
+ *
+ * @details This function returns a bool matrix.\n
+ *          You can configure the macro `FLAMES_MAT_BOOL_OPER_UNROLL_FACTOR` to determine the parallelism.
+ * @tparam M1 The left matrix type.
+ * @tparam _unused1 (unused)
+ * @tparam M2 The right matrix type.
+ * @tparam _unused2 (unused)
+ * @tparam T1 The left matrix element type.
+ * @tparam T2 The right matrix element type.
+ * @tparam n_rows The number of rows.
+ * @tparam n_cols The number of columns.
+ * @tparam type The matrix MatType.
+ * @param mat_L The left matrix.
+ * @param mat_R The right matrix.
+ * @return (Mat<bool, n_rows, n_cols, type>) The comparison result.
+ */
+template <template <class, size_t, size_t, MatType, class...> typename M1, typename... _unused1,
+          template <class, size_t, size_t, MatType, class...> typename M2, typename... _unused2, typename T1,
+          typename T2, size_t n_rows, size_t n_cols, MatType type>
+Mat<bool, n_rows, n_cols, type> operator==(const M1<T1, n_rows, n_cols, type, _unused1...>& mat_L,
+                                           const M2<T2, n_rows, n_cols, type, _unused2...>& mat_R) {
+    Mat<bool, n_rows, n_cols, type> mat;
+OPERATOR_EQUAL:
+    for (size_t i = 0; i != mat_L.size(); ++i) {
+        FLAMES_PRAGMA(UNROLL factor = FLAMES_MAT_BOOL_OPER_UNROLL_FACTOR)
+        mat[i] = mat_L[i] == mat_R[i];
+    }
+    return mat;
+}
+
+/**
+ * @brief Element-wise unequal comparison
+ *
+ * @details This function returns a bool matrix.\n
+ *          You can configure the macro `FLAMES_MAT_BOOL_OPER_UNROLL_FACTOR` to determine the parallelism.
+ * @tparam M1 The left matrix type.
+ * @tparam _unused1 (unused)
+ * @tparam M2 The right matrix type.
+ * @tparam _unused2 (unused)
+ * @tparam T1 The left matrix element type.
+ * @tparam T2 The right matrix element type.
+ * @tparam n_rows The number of rows.
+ * @tparam n_cols The number of columns.
+ * @tparam type The matrix MatType.
+ * @param mat_L The left matrix.
+ * @param mat_R The right matrix.
+ * @return (Mat<bool, n_rows, n_cols, type>) The comparison result.
+ */
+template <template <class, size_t, size_t, MatType, class...> typename M1, typename... _unused1,
+          template <class, size_t, size_t, MatType, class...> typename M2, typename... _unused2, typename T1,
+          typename T2, size_t n_rows, size_t n_cols, MatType type>
+Mat<bool, n_rows, n_cols, type> operator!=(const M1<T1, n_rows, n_cols, type, _unused1...>& mat_L,
+                                           const M2<T2, n_rows, n_cols, type, _unused2...>& mat_R) {
+    Mat<bool, n_rows, n_cols, type> mat;
+OPERATOR_UNEQUAL:
+    for (size_t i = 0; i != mat_L.size(); ++i) {
+        FLAMES_PRAGMA(UNROLL factor = FLAMES_MAT_BOOL_OPER_UNROLL_FACTOR)
+        mat[i] = mat_L[i] != mat_R[i];
+    }
+    return mat;
+}
+
+/**
+ * @brief Element-wise greater comparison
+ *
+ * @details This function returns a bool matrix.\n
+ *          You can configure the macro `FLAMES_MAT_BOOL_OPER_UNROLL_FACTOR` to determine the parallelism.
+ * @tparam M1 The left matrix type.
+ * @tparam _unused1 (unused)
+ * @tparam M2 The right matrix type.
+ * @tparam _unused2 (unused)
+ * @tparam T1 The left matrix element type.
+ * @tparam T2 The right matrix element type.
+ * @tparam n_rows The number of rows.
+ * @tparam n_cols The number of columns.
+ * @tparam type The matrix MatType.
+ * @param mat_L The left matrix.
+ * @param mat_R The right matrix.
+ * @return (Mat<bool, n_rows, n_cols, type>) The comparison result.
+ */
+template <template <class, size_t, size_t, MatType, class...> typename M1, typename... _unused1,
+          template <class, size_t, size_t, MatType, class...> typename M2, typename... _unused2, typename T1,
+          typename T2, size_t n_rows, size_t n_cols, MatType type>
+Mat<bool, n_rows, n_cols, type> operator>(const M1<T1, n_rows, n_cols, type, _unused1...>& mat_L,
+                                          const M2<T2, n_rows, n_cols, type, _unused2...>& mat_R) {
+    Mat<bool, n_rows, n_cols, type> mat;
+OPERATOR_GREATER:
+    for (size_t i = 0; i != mat_L.size(); ++i) {
+        FLAMES_PRAGMA(UNROLL factor = FLAMES_MAT_BOOL_OPER_UNROLL_FACTOR)
+        mat[i] = mat_L[i] > mat_R[i];
+    }
+    return mat;
+}
+
+/**
+ * @brief Element-wise less comparison
+ *
+ * @details This function returns a bool matrix.\n
+ *          You can configure the macro `FLAMES_MAT_BOOL_OPER_UNROLL_FACTOR` to determine the parallelism.
+ * @tparam M1 The left matrix type.
+ * @tparam _unused1 (unused)
+ * @tparam M2 The right matrix type.
+ * @tparam _unused2 (unused)
+ * @tparam T1 The left matrix element type.
+ * @tparam T2 The right matrix element type.
+ * @tparam n_rows The number of rows.
+ * @tparam n_cols The number of columns.
+ * @tparam type The matrix MatType.
+ * @param mat_L The left matrix.
+ * @param mat_R The right matrix.
+ * @return (Mat<bool, n_rows, n_cols, type>) The comparison result.
+ */
+template <template <class, size_t, size_t, MatType, class...> typename M1, typename... _unused1,
+          template <class, size_t, size_t, MatType, class...> typename M2, typename... _unused2, typename T1,
+          typename T2, size_t n_rows, size_t n_cols, MatType type>
+Mat<bool, n_rows, n_cols, type> operator<(const M1<T1, n_rows, n_cols, type, _unused1...>& mat_L,
+                                          const M2<T2, n_rows, n_cols, type, _unused2...>& mat_R) {
+    Mat<bool, n_rows, n_cols, type> mat;
+OPERATOR_LESS:
+    for (size_t i = 0; i != mat_L.size(); ++i) {
+        FLAMES_PRAGMA(UNROLL factor = FLAMES_MAT_BOOL_OPER_UNROLL_FACTOR)
+        mat[i] = mat_L[i] < mat_R[i];
+    }
+    return mat;
+}
+
+/**
+ * @brief Element-wise greater or equal comparison
+ *
+ * @details This function returns a bool matrix.\n
+ *          You can configure the macro `FLAMES_MAT_BOOL_OPER_UNROLL_FACTOR` to determine the parallelism.
+ * @tparam M1 The left matrix type.
+ * @tparam _unused1 (unused)
+ * @tparam M2 The right matrix type.
+ * @tparam _unused2 (unused)
+ * @tparam T1 The left matrix element type.
+ * @tparam T2 The right matrix element type.
+ * @tparam n_rows The number of rows.
+ * @tparam n_cols The number of columns.
+ * @tparam type The matrix MatType.
+ * @param mat_L The left matrix.
+ * @param mat_R The right matrix.
+ * @return (Mat<bool, n_rows, n_cols, type>) The comparison result.
+ */
+template <template <class, size_t, size_t, MatType, class...> typename M1, typename... _unused1,
+          template <class, size_t, size_t, MatType, class...> typename M2, typename... _unused2, typename T1,
+          typename T2, size_t n_rows, size_t n_cols, MatType type>
+Mat<bool, n_rows, n_cols, type> operator>=(const M1<T1, n_rows, n_cols, type, _unused1...>& mat_L,
+                                           const M2<T2, n_rows, n_cols, type, _unused2...>& mat_R) {
+    Mat<bool, n_rows, n_cols, type> mat;
+OPERATOR_GEQ:
+    for (size_t i = 0; i != mat_L.size(); ++i) {
+        FLAMES_PRAGMA(UNROLL factor = FLAMES_MAT_BOOL_OPER_UNROLL_FACTOR)
+        mat[i] = mat_L[i] >= mat_R[i];
+    }
+    return mat;
+}
+
+/**
+ * @brief Element-wise less or equal comparison
+ *
+ * @details This function returns a bool matrix.\n
+ *          You can configure the macro `FLAMES_MAT_BOOL_OPER_UNROLL_FACTOR` to determine the parallelism.
+ * @tparam M1 The left matrix type.
+ * @tparam _unused1 (unused)
+ * @tparam M2 The right matrix type.
+ * @tparam _unused2 (unused)
+ * @tparam T1 The left matrix element type.
+ * @tparam T2 The right matrix element type.
+ * @tparam n_rows The number of rows.
+ * @tparam n_cols The number of columns.
+ * @tparam type The matrix MatType.
+ * @param mat_L The left matrix.
+ * @param mat_R The right matrix.
+ * @return (Mat<bool, n_rows, n_cols, type>) The comparison result.
+ */
+template <template <class, size_t, size_t, MatType, class...> typename M1, typename... _unused1,
+          template <class, size_t, size_t, MatType, class...> typename M2, typename... _unused2, typename T1,
+          typename T2, size_t n_rows, size_t n_cols, MatType type>
+Mat<bool, n_rows, n_cols, type> operator<=(const M1<T1, n_rows, n_cols, type, _unused1...>& mat_L,
+                                           const M2<T2, n_rows, n_cols, type, _unused2...>& mat_R) {
+    Mat<bool, n_rows, n_cols, type> mat;
+OPERATOR_LEQ:
+    for (size_t i = 0; i != mat_L.size(); ++i) {
+        FLAMES_PRAGMA(UNROLL factor = FLAMES_MAT_BOOL_OPER_UNROLL_FACTOR)
+        mat[i] = mat_L[i] <= mat_R[i];
+    }
+    return mat;
 }
 
 template <typename Tp = double, template <class, size_t, size_t, MatType, class...> typename M1, typename... _unused1,
@@ -9305,8 +9499,9 @@ Tp innerProd(const M1<T1, L_rows, L_cols, type, _unused1...>& mat_L,
              const M2<T2, R_rows, R_cols, type, _unused2...>& mat_R) {
     assert(mat_L.size() == mat_R.size() && "Dimension should meet for innerProd.");
     Tp result = 0;
+INNER_PROD:
     for (size_t i = 0; i != mat_L.size(); ++i) {
-        FLAMES_PRAGMA(UNROLL factor = FLAMES_MAT_DOT_UNROLL_FACTOR)
+        FLAMES_PRAGMA(UNROLL factor = FLAMES_MAT_EMUL_UNROLL_FACTOR)
         result += static_cast<Tp>(mat_L[i] * mat_R[i]);
     }
     return result;

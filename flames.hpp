@@ -3,8 +3,8 @@
 
 // include all headers of the FLAMES library
 #include "core.hpp"
-#include "tensor.hpp"
 #include "sort.hpp"
+#include "tensor.hpp"
 #include "type.hpp"
 
 // use the flames namespace

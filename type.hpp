@@ -6,15 +6,15 @@
 
 namespace flames {
 
-template<int I, int D>
+template <int I, int D>
 using FxP_s = ap_fixed<I + D + 1, I>;
 
-template<int I, int D>
+template <int I, int D>
 using FxP = FxP_s<I, D>;
 
-template<int I, int D>
+template <int I, int D>
 using FxP_u = ap_ufixed<I + D, I>;
 
-}
+} // namespace flames
 
 #endif
