@@ -3,7 +3,7 @@
  * @author Wuqiong Zhao (me@wqzhao.org), et al.
  * @brief Core Utilities for FLAMES
  * @version 0.1.0
- * @date 2023-01-21
+ * @date 2023-07-15
  *
  * @copyright Copyright (c) 2022-2023 Wuqiong Zhao
  *
@@ -42,7 +42,7 @@
 #endif
 
 #ifndef PRAGMA_SUB
-#    define PRAGMA_SUB(x) _Pragma(#    x)
+#    define PRAGMA_SUB(x) _Pragma(#x)
 #endif
 #ifndef FLAMES_PRAGMA
 // Alias for #pragma HLS with support for macro expansion.
@@ -157,6 +157,11 @@
 #    undef INLINE
 #endif
 
+/**
+ * @brief Namespace for the FLAMES library.
+ *
+ * @details When you include 'flames.hpp', this namespace is automatically used.
+ */
 namespace flames {
 
 /**
@@ -262,6 +267,9 @@ inline constexpr MatType sumType(MatType type1, MatType type2) noexcept {
  *
  * @param type1 The MatType of the left matrix.
  * @param type2 The MatType of the right matrix.
+ * @param n_rows The number of rows of the left matrix.
+ * @param comm The number of columns of the left matrix and the number of rows of the right matrix.
+ * @param n_cols The number of columns of the right matrix.
  * @return (constexpr MatType) The multiplication matrix type.
  */
 inline constexpr MatType mulType(MatType type1, MatType type2, size_t n_rows, size_t comm, size_t n_cols) noexcept {
@@ -286,10 +294,9 @@ inline constexpr MatType mulType(MatType type1, MatType type2, size_t n_rows, si
 }
 
 /**
- * @brief Transpose type of two matrices.
+ * @brief Transpose type of a matrix.
  *
- * @param type1 The MatType of the left matrix.
- * @param type2 The MatType of the right matrix.
+ * @param type The MatType of the matrix.
  * @return (constexpr MatType) The transpose matrix type.
  */
 inline constexpr MatType tType(MatType type) noexcept {
@@ -5539,7 +5546,7 @@ class Mat {
      * @details You may configure macro
      *          `FLAMES_MAT_COPY_UNROLL_FACTOR` or
      *          `FLAMES_UNROLL_FACTOR` to do the operation in parallel.
-     * @param c The column index.
+     * @param r The row index.
      * @return (Mat<T, 1, n_cols, MatType::NORMAL>)(row vector) The certain row vector copy.
      */
     Mat<T, 1, n_cols, MatType::NORMAL> row(size_t r) const {
@@ -9128,7 +9135,7 @@ static inline Mat<T, n_rows, n_cols, type>& operator*=(const M<T, n_rows, n_cols
  * @tparam _unused (unused)
  * @tparam ScalarT The scalar type.
  * @tparam T The matrix element type.
- * @param mat The matrix.
+ * @param mat_L The matrix.
  * @param s The scalar.
  * @return (Mat&) The multiplication result (a reference to 'this').
  */
@@ -9181,7 +9188,7 @@ static inline Mat<T, n_rows, n_cols, type> operator*(const M<T, n_rows, n_cols, 
  * @tparam _unused (unused)
  * @tparam ScalarT The scalar type.
  * @tparam T2 The matrix element type.
- * @param mat The matrix.
+ * @param mat_R The matrix.
  * @param s The scalar.
  * @return (Mat&) The multiplication result (a reference to 'this').
  */

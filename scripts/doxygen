@@ -1,7 +1,3 @@
-#!/bin/bash
-shopt -s extglob
+#!/bin/sh
 doxygen misc/Doxyfile
-cd docs
-rm !(.git|favicon.ico|functions)
-cd ..
-cp -r misc/_doxygen/html/. docs/
+cp misc/logo/favicon.ico misc/_doxygen/html/favicon.ico

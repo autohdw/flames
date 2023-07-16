@@ -1,3 +1,14 @@
+/**
+ * @file tensor.hpp
+ * @author Wuqiong Zhao (me@wqzhao.org), et al.
+ * @brief Tensor (3D Array) for FLAMES
+ * @version 0.1.0
+ * @date 2023-07-15
+ *
+ * @copyright Copyright (c) 2023
+ *
+ */
+
 #ifndef _FLAMES_TENSOR_HPP_
 #define _FLAMES_TENSOR_HPP_
 

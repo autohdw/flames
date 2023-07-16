@@ -1,3 +1,14 @@
+/**
+ * @file sort.hpp
+ * @author Wuqiong Zhao (me@wqzhao.org), et al.
+ * @brief Sorting for FLAMES
+ * @version 0.1.0
+ * @date 2023-07-15
+ *
+ * @copyright Copyright (c) 2023 Wuqiong Zhao
+ *
+ */
+
 #ifndef _FLAMES_SORT_HPP_
 #define _FLAMES_SORT_HPP_
 
