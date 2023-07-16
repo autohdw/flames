@@ -1,0 +1,59 @@
+# Deploy Doxygen Documentation of FLAMES
+name: Doxygen Docs
+
+on:
+  # Runs on pushes targeting the default branch
+  push:
+    branches: ["master"]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
+# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  # Single deploy job since we're just deploying
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          submodules: true
+      - name: Install Doxygen
+        run: |
+          # Install Doxygen 1.9.4
+          # This is because this version is compatible of my header template.
+          curl -kLSs https://github.com/doxygen/doxygen/releases/download/Release_1_9_4/doxygen-1.9.4.linux.bin.tar.gz -o doxygen-1.9.4.linux.tar.gz
+          gunzip doxygen-1.9.4.linux.tar.gz    # uncompress the archive
+          tar xf doxygen-1.9.4.linux.tar       # unpack it
+          cd doxygen-1.9.4
+          sudo make install
+          cd ..
+          ## Install Graphviz
+          sudo apt install -y graphviz
+      - name: Run Doxygen
+        run: ./scripts/doxygen
+      - name: Setup Pages
+        uses: actions/configure-pages@v3
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v2
+        with:
+          # Upload Doxygen Directories
+          path: './misc/_doxygen/html'
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v2
