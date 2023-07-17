@@ -42,7 +42,7 @@
 #endif
 
 #ifndef PRAGMA_SUB
-#    define PRAGMA_SUB(x) _Pragma(#x)
+#    define PRAGMA_SUB(x) _Pragma(#    x)
 #endif
 #ifndef FLAMES_PRAGMA
 // Alias for #pragma HLS with support for macro expansion.
@@ -9283,7 +9283,8 @@ operator*(const M1<T1, n_rows, comm, type1, _unused1...>& mat_L,
  * @details You can configure the macro `FLAMES_MAT_EMUL_UNROLL_FACTOR` to determine the parallelism.\n
  *          This internally calls Mat::emul(mat, mat).\n
  *          The return element type is that of the left matrix.
- * @note It now only supports element-wise product of two matrices of the same dimension and MatType.
+ * @note It now only supports element-wise product of two matrices of the same dimension and MatType.\n
+ *       This is not the modulus operator.Ise .mod() for the element-wise modulus operation.
  * @tparam M1 The left matrix type.
  * @tparam _unused1 (unused)
  * @tparam M2 The right matrix type.
@@ -9494,6 +9495,38 @@ OPERATOR_LEQ:
     for (size_t i = 0; i != mat_L.size(); ++i) {
         FLAMES_PRAGMA(UNROLL factor = FLAMES_MAT_BOOL_OPER_UNROLL_FACTOR)
         mat[i] = mat_L[i] <= mat_R[i];
+    }
+    return mat;
+}
+
+/**
+ * @brief Element-wise modulus.
+ *
+ * @details This requires the operator `%` is defined between both matrix elements.
+ * @note This should not be misued with `operator%`, which is the element-wise multiplication.
+ * @tparam M1 The left matrix type.
+ * @tparam _unused1 (unused)
+ * @tparam M2 The right matrix type.
+ * @tparam _unused2 (unused)
+ * @tparam T1 The left matrix element type.
+ * @tparam T2 The right matrix element type.
+ * @tparam n_rows The number of rows.
+ * @tparam n_cols The number of columns.
+ * @tparam type The matrix MatType.
+ * @param mat_L The left matrix.
+ * @param mat_R The right matrix.
+ * @return (Mat<T1, n_rows, n_cols, type>) The modulus result matrix.
+ */
+template <template <class, size_t, size_t, MatType, class...> typename M1, typename... _unused1,
+          template <class, size_t, size_t, MatType, class...> typename M2, typename... _unused2, typename T1,
+          typename T2, size_t n_rows, size_t n_cols, MatType type>
+Mat<T1, n_rows, n_cols, type> mod(const M1<T1, n_rows, n_cols, type, _unused1...>& mat_L,
+                                  const M2<T2, n_rows, n_cols, type, _unused2...>& mat_R) {
+    Mat<T1, n_rows, n_cols, type> mat;
+OPERATOR_LEQ:
+    for (size_t i = 0; i != mat_L.size(); ++i) {
+        FLAMES_PRAGMA(UNROLL factor = FLAMES_MAT_BOOL_OPER_UNROLL_FACTOR)
+        mat[i] = mat_L[i] % mat_R[i]; // Operator % Should be defined, otherwise compilation error.
     }
     return mat;
 }

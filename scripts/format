@@ -1,4 +1,5 @@
 #!/bin/sh
 clang-format -i *.hpp
+clang-format -i examples/hello-world/*.cpp
 clang-format -i examples/task-level-pipelining/*.cpp
 echo "Finished formatting 'flames'!"
