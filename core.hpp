@@ -19,6 +19,7 @@
 #include <cstddef>
 #include <fstream>
 #include <hls_vector.h>
+#include <initializer_list>
 #include <iostream>
 #include <type_traits>
 #include <vector>
@@ -421,6 +422,9 @@ using RowVec = Mat<T, 1, N>;
 template <typename T, size_t n_rows, size_t n_cols, MatType type = MatType::NORMAL>
 class MatView;
 
+template <typename T, size_t n_rows, size_t n_cols, MatType type = MatType::NORMAL>
+class MatRef;
+
 /**
  * @brief Read only view version of the opposite of a matrix.
  *
@@ -500,8 +504,11 @@ class MatViewOffDiag;
  * @tparam type Matrix type (surely NORMAL here).
  * @tparam type_parent Parent matrix (where it takes the colunm vector) type.
  */
-template <size_t Index, typename T, size_t n_rows, size_t n_cols, MatType type, typename type_parent = MATTYPE_NORMAL>
+template <typename T, size_t n_rows, size_t n_cols, MatType type, typename type_parent = MATTYPE_NORMAL>
 class MatViewCol;
+
+template <typename T, size_t n_rows, size_t n_cols, MatType type, typename type_parent = MATTYPE_NORMAL>
+class MatRefCol;
 
 /**
  * @brief Read only view version of a certain row as row vector.
@@ -512,7 +519,7 @@ class MatViewCol;
  * @tparam type Matrix type (surely NORMAL here).
  * @tparam type_parent Parent matrix (where it takes the row vector) type.
  */
-template <size_t Index, typename T, size_t n_rows, size_t n_cols, MatType type, typename type_parent = MATTYPE_NORMAL>
+template <typename T, size_t n_rows, size_t n_cols, MatType type, typename type_parent = MATTYPE_NORMAL>
 class MatViewRow;
 
 /**
@@ -542,21 +549,6 @@ template <size_t first_row, size_t last_row, typename T, size_t n_rows, size_t n
 class MatViewRows;
 
 /**
- * @brief Read only view version of a discrete columns.
- *
- * @tparam Cols The number of the discrete columns taken by the container.
- * @tparam T Element type.
- * @tparam M Container element type.
- * @tparam n_rows Number of rows.
- * @tparam n_cols Number of columns.
- * @tparam type Matrix type (surely NORMAL here).
- * @tparam type_parent Parent matrix (where it takes the colunm vectors) type.
- */
-template <size_t Cols, typename T, typename M, size_t n_rows, size_t n_cols, MatType type,
-          typename type_parent = MATTYPE_NORMAL>
-class MatViewColsContainer;
-
-/**
  * @brief Afterwards action with initialization.
  *
  * @note This should only be used for view classes.
@@ -567,20 +559,7 @@ enum class InitAfterwards {
     TR    /**< transpose */
 };
 
-/**
- * @brief Read only view version of a discrete rows.
- *
- * @tparam Rows The number of the discrete rows taken by the container.
- * @tparam T Element type.
- * @tparam M Container element type.
- * @tparam n_rows Number of rows.
- * @tparam n_cols Number of columns.
- * @tparam type Matrix type (surely NORMAL here).
- * @tparam type_parent Parent matrix (where it takes the row vectors) type.
- */
-template <size_t Rows, typename T, typename M, size_t n_rows, size_t n_cols, MatType type,
-          typename type_parent = MATTYPE_NORMAL>
-class MatViewRowsContainer;
+enum class Init { NONE, ZEROS, ONES };
 
 template <typename T, size_t n_rows, size_t n_cols, MatType type>
 class Mat {
@@ -596,11 +575,9 @@ class Mat {
     friend class MatViewDiagRowVec;
     template <typename View_T, size_t View_N, size_t View_N_, MatType View_type, typename type_parent>
     friend class MatViewOffDiag;
-    template <size_t Index, typename View_T, size_t View_n_rows, size_t View_n_cols, MatType View_type,
-              typename type_parent>
+    template <typename View_T, size_t View_n_rows, size_t View_n_cols, MatType View_type, typename type_parent>
     friend class MatViewCol;
-    template <size_t Index, typename View_T, size_t View_n_rows, size_t View_n_cols, MatType View_type,
-              typename type_parent>
+    template <typename View_T, size_t View_n_rows, size_t View_n_cols, MatType View_type, typename type_parent>
     friend class MatViewRow;
     template <size_t first_col, size_t last_col, typename View_T, size_t View_n_rows, size_t View_n_cols,
               MatType View_type, typename type_parent>
@@ -608,12 +585,6 @@ class Mat {
     template <size_t first_row, size_t last_row, typename View_T, size_t View_n_rows, size_t View_n_cols,
               MatType View_type, typename type_parent>
     friend class MatViewRows;
-    template <size_t Cols, typename View_T, typename View_M, size_t View_n_rows, size_t View_n_cols, MatType View_type,
-              typename type_parent>
-    friend class MatViewColsContainer;
-    template <size_t Rows, typename View_T, typename View_M, size_t View_n_rows, size_t View_n_cols, MatType View_type,
-              typename type_parent>
-    friend class MatViewRowsContainer;
     template <typename View_T_T, size_t T_n_rows, size_t T_n_cols, size_t T_n_slices, MatType T_type>
     friend class Tensor;
 
@@ -650,7 +621,7 @@ class Mat {
      * @param val The initial value.
      */
     Mat(T val) {
-        static_assert(n_rows != 0, "'rows' should be no smaller than 1.");
+        static_assert(n_rows != 0, "'n_rows' should be no smaller than 1.");
         static_assert(n_cols != 0, "'n_cols' should be no smaller than 1.");
         static_assert(type == MatType::NORMAL || n_rows == n_cols, "Square matrix 'rows' should be equal to 'n_cols'.");
 #ifdef FLAMES_MAT_PARTITION_COMPLETE
@@ -750,6 +721,27 @@ class Mat {
         std::cout << "Mat copy!" << std::endl;
 #endif
     }
+
+    template <typename T2>
+    Mat(std::initializer_list<T2> list) {
+        auto list_size = list.size();
+        assert(list_size <= size() && "Initializer list size should not exceed size().");
+    MAT_COPY_FROM_INIT_LIST:
+        for (size_t i = 0; i != list_size; ++i) {
+            FLAMES_PRAGMA(UNROLL factor = FLAMES_MAT_COPY_UNROLL_FACTOR)
+            _data[i] = *(list.begin() + i);
+        }
+#ifdef FLAMES_MAT_PARTITION_COMPLETE
+        FLAMES_PRAGMA(ARRAY_PARTITION variable = _data type = complete)
+#else
+        FLAMES_PRAGMA(ARRAY_PARTITION variable = _data type = block factor = FLAMES_MAT_PARTITION_FACTOR)
+#endif
+#ifdef FLAMES_PRINT_PER_MAT_COPY
+        std::cout << "Mat copy!" << std::endl;
+#endif
+    }
+
+    Mat(Init init) {}
 
     //   public: // original private
   public:
@@ -1998,7 +1990,7 @@ class Mat {
             // FLAMES_PRAGMA(DEPENDENCE variable=mat_L inter false)
             // FLAMES_PRAGMA(DEPENDENCE variable=mat_L intra false)
             // FLAMES_PRAGMA(DEPENDENCE variable=mat_R inter false)
-            // FLAMES_PRAGMA(DEPENDENCE variable=mat_R intra false)
+            // FLAMES_PRAGMA(DEPENDENCE variable=mat_R intra false
             GEMM_c:
                 for (size_t c = 0; c != n_cols; ++c) {
                     FLAMES_PRAGMA(LOOP_FLATTEN)
@@ -5460,7 +5452,8 @@ class Mat {
 
     template <template <class, size_t, size_t, MatType, class...> typename M, typename... _unused, typename T2,
               MatType type2, size_t rows_, size_t cols_>
-    void col(size_t c, const M<T2, rows_, cols_, type2, _unused...>& mat) {
+    [[deprecated("Use .col_ to create a MatRefCol to write a column instead.")]] void
+    col(size_t c, const M<T2, rows_, cols_, type2, _unused...>& mat) {
         assert(c < n_cols && "Take the specific col by index requires 'The index should be smaller than the number of "
                              "the matrix's columns.'.");
         assert(mat.size() == n_rows && "Element number should be n_rows in Mat::col(index, mat).");
@@ -5498,14 +5491,18 @@ class Mat {
     /**
      * @brief Take a column of a matrix by index as a read only view.
      *
-     * @return (MatViewCol<Index, T, n_rows, n_cols, MatType::NORMAL, MType<type>>) The read only a column vector view.
+     * @return (MatViewCol<T, n_rows, n_cols, MatType::NORMAL, MType<type>>) The read only a column vector view.
      */
-    template <size_t Index>
-    MatViewCol<Index, T, n_rows, n_cols, MatType::NORMAL, MType<type>> Col_() const {
-        static_assert(Index > int(0), "Take the specific col by index requires 'The index can't be smaller than 0'.");
-        static_assert(Index < n_cols, "Take the specific col by index requires 'The index should be smaller than the "
-                                      "number of the matrix's columns.'.");
-        return *this;
+    MatViewCol<T, n_rows, n_cols, MatType::NORMAL, MType<type>> col_(size_t index) const {
+        assert(index < n_cols && "Take the specific col by index requires 'The index should be smaller than the number "
+                                 "of the matrix's columns.'.");
+        return { *this, index };
+    }
+
+    MatRefCol<T, n_rows, n_cols, MatType::NORMAL, MType<type>> col_(size_t index) {
+        assert(index < n_cols && "Take the specific col by index requires 'The index should be smaller than the number "
+                                 "of the matrix's columns.'.");
+        return { *this, index };
     }
 
     /**
@@ -5560,18 +5557,18 @@ class Mat {
         return mat;
     }
 
-    /**
-     * @brief Take a row of a matrix by index as a read only view.
-     *
-     * @return (MatViewRow<Index, T, n_rows, n_cols, MatType::NORMAL, MType<type>>) The read only a row vector view.
-     */
-    template <size_t Index>
-    MatViewRow<Index, T, n_rows, n_cols, MatType::NORMAL, MType<type>> Row_() const {
-        static_assert(Index > int(0), "Take the specific row by index requires 'The index can't be smaller than 0'.");
-        static_assert(Index < n_rows, "Take the specific row by index requires 'The index should be smaller than the "
-                                      "number of the matrix's rows.'.");
-        return *this;
-    }
+    // /**
+    //  * @brief Take a row of a matrix by index as a read only view.
+    //  *
+    //  * @return (MatViewRow<Index, T, n_rows, n_cols, MatType::NORMAL, MType<type>>) The read only a row vector view.
+    //  */
+    // MatViewRow<T, n_rows, n_cols, MatType::NORMAL, MType<type>> Row_() const {
+    //     static_assert(Index > int(0), "Take the specific row by index requires 'The index can't be smaller than
+    //     0'."); static_assert(Index < n_rows, "Take the specific row by index requires 'The index should be smaller
+    //     than the "
+    //                                   "number of the matrix's rows.'.");
+    //     return *this;
+    // }
 
     /**
      * @brief Take successive columns of a matrix by index.
@@ -5813,7 +5810,7 @@ class Mat {
         Mat<T, _rows, n_cols, MatType::NORMAL> mat;
         for (size_t i = 0; i != _rows; ++i) {
             FLAMES_PRAGMA(UNROLL factor = FLAMES_MAT_COPY_UNROLL_FACTOR)
-            assert(vector[i] > int(0) &&
+            assert(vector[i] >= int(0) &&
                    "Take the discrete n_rows by index requires 'The indexes can't be smaller than 0'.");
             assert(vector[i] < n_rows && "Take the discrete n_rows by index requires 'The indexes should be smaller "
                                          "than the number of the matrix's rows.'.");
@@ -5823,18 +5820,6 @@ class Mat {
             }
         }
         return mat;
-    }
-
-    /**
-     * @brief Take discrete rows of a matrix by container as a read only view.
-     *
-     * @return (MatViewRowsContainer<Rows, T, M, n_rows, n_cols, MatType::NORMAL, MType<type>>) The read only rows
-     * vector view.
-     */
-    template <size_t Rows, typename M>
-    MatViewRowsContainer<Rows, T, M, n_rows, n_cols, MatType::NORMAL, MType<type>> Rows_(const M container) const {
-        MatViewRowsContainer<Rows, T, M, n_rows, n_cols, MatType::NORMAL, MType<type>> View(*this, container);
-        return View;
     }
 
     /**
@@ -5861,7 +5846,7 @@ class Mat {
         static_assert(n_rows == rows_, "The number of the Matrices' rows should meet.");
         for (size_t j = 0; j != n_cols; ++j) {
             FLAMES_PRAGMA(UNROLL factor = FLAMES_MAT_COPY_UNROLL_FACTOR)
-            assert(vector[j] > int(0) &&
+            assert(vector[j] >= int(0) &&
                    "Take the discrete n_cols by index requires 'The indexes can't be smaller than 0'.");
             assert(vector[j] < n_cols && "Take the discrete n_cols by index requires 'The indexes should be smaller "
                                          "than the number of the matrix's cols.'.");
@@ -5897,7 +5882,7 @@ class Mat {
         Mat<T, n_rows, _cols, MatType::NORMAL> mat;
         for (size_t j = 0; j != _cols; ++j) {
             FLAMES_PRAGMA(UNROLL factor = FLAMES_MAT_COPY_UNROLL_FACTOR)
-            assert(vector[j] > int(0) &&
+            assert(vector[j] >= int(0) &&
                    "Take the discrete n_cols by index requires 'The indexes can't be smaller than 0'.");
             assert(vector[j] < n_cols && "Take the discrete n_cols by index requires 'The indexes should be smaller "
                                          "than the number of the matrix's cols.'.");
@@ -5907,18 +5892,6 @@ class Mat {
             }
         }
         return mat;
-    }
-
-    /**
-     * @brief Take discrete cols of a matrix by container as a read only view.
-     *
-     * @return (MatViewColsContainer<Cols, T, M, n_rows, n_cols, MatType::NORMAL, MType<type>>) The read only columns
-     * vector view.
-     */
-    template <size_t Cols, typename M>
-    MatViewColsContainer<Cols, T, M, n_rows, n_cols, MatType::NORMAL, MType<type>> Cols_(const M container) const {
-        MatViewColsContainer<Cols, T, M, n_rows, n_cols, MatType::NORMAL, MType<type>> View(*this, container);
-        return View;
     }
 
     /**
@@ -7081,7 +7054,7 @@ class MatView {
     MatView(const Mat<T, n_rows, n_cols, type>& m) : _data(m.rawDataPtr()) {}
     MatView(Mat<T, n_rows, n_cols, type>& m) : _data(m.rawDataPtr()) {}
 
-    MatView(T* const ptr) : _data(ptr) {}
+    MatView(const T* const ptr) : _data(ptr) {}
 
     /**
      * @brief Copy constructor.
@@ -7106,6 +7079,251 @@ class MatView {
     }
 
     MatView& operator=(const Mat<T, n_rows, n_cols, type>& m) {
+        for (size_t i = 0; i != size(); ++i) {
+            FLAMES_PRAGMA(UNROLL factor = FLAMES_MAT_COPY_UNROLL_FACTOR)
+            _data[i] = m[i];
+        }
+        return *this;
+    }
+
+    template <typename M>
+    void assign(M m) {
+        for (size_t i = 0; i != size(); ++i) {
+            FLAMES_PRAGMA(UNROLL factor = FLAMES_MAT_COPY_UNROLL_FACTOR)
+            _data[i] = m[i];
+        }
+    }
+
+    /**
+     * @brief Get the read only data element from row and column index.
+     *
+     * @param r The row index.
+     * @param c The column index.
+     * @return (T) The element value.
+     */
+    T operator()(size_t r, size_t c) const {
+        FLAMES_PRAGMA(INLINE)
+        assert(r < n_rows && "Matrix row index should be within range");
+        assert(c < n_cols && "Matrix col index should be within range");
+        if (type == MatType::NORMAL) {
+            return _data[r * n_cols + c];
+        } else if (type == MatType::DIAGONAL) {
+            if (r == c) return _data[r];
+            else return T(0);
+        } else if (type == MatType::SCALAR) {
+            if (r == c) return _data[0];
+            else return T(0);
+        } else if (type == MatType::UPPER) {
+            if (r <= c) return _data[(2 * n_cols + 1 - r) * r / 2 + c - r];
+            else return T(0);
+        } else if (type == MatType::LOWER) {
+            if (r >= c) return _data[(1 + r) * r / 2 + c];
+            else return T(0);
+        } else if (type == MatType::SUPPER) {
+            if (r < c) return _data[(2 * n_cols + 1 - r) * r / 2 + c - 2 * r - 1];
+            else return T(0);
+        } else if (type == MatType::SLOWER) {
+            if (r >= c) return _data[(1 + r) * r / 2 + c - r];
+            else return T(0);
+        } else if (type == MatType::SYM) {
+            if (r <= c) return _data[(2 * n_cols + 1 - r) * r / 2 + c - r];
+            else return _data[(2 * n_cols + 1 - c) * c / 2 + r - c];
+        } else if (type == MatType::ASYM) {
+            if (r < c) return _data[(2 * n_cols + 1 - r) * r / 2 + c - r * 2 - 1];
+            else if (r > c) return -_data[(2 * n_cols + 1 - c) * c / 2 + r - c * 2 - 1];
+            else return T(0);
+        } else {
+            // Normally it is impossible to reach here.
+            assert(!"Impossible! Unknown MatType!");
+            return T(0);
+        }
+    }
+
+    /**
+     * @brief Get the read only element by array row major index.
+     *
+     * @param index The index.
+     * @return (T) The data.
+     */
+    T operator[](size_t index) const {
+        FLAMES_PRAGMA(INLINE)
+        assert(index < size() && "[index] should be in range in MatView");
+        return _data[index];
+    }
+
+    /**
+     * @brief Take a column of a matrix by index.
+     *
+     * @details The result is stored to 'this'.
+     *          You may configure macro
+     *          `FLAMES_MAT_COPY_UNROLL_FACTOR` or
+     *          `FLAMES_UNROLL_FACTOR` to do the operation in parallel.
+     * @tparam M The original matrix type.
+     * @tparam _unused (unused)
+     * @tparam T2 The original matrix element type.
+     * @param mat The original matrix.
+     * @param c The column index.
+     * @return (Mat&) The certain column(a column vector) (a reference to 'this') .
+     */
+    template <template <class, size_t, size_t, MatType, class...> typename M, typename... _unused, typename T2,
+              MatType type2, size_t rows_, size_t cols_>
+    MatView& col(const M<T2, rows_, cols_, type2, _unused...>& mat, size_t c) {
+        assert(c < n_cols && "Take the specific col by index requires 'The index should be smaller than the number of "
+                             "the matrix's columns.'.");
+        static_assert(size() == rows_, "Element number should be rows_ in Mat::col(mat, index).");
+        for (size_t i = 0; i != size(); ++i) {
+            FLAMES_PRAGMA(UNROLL factor = FLAMES_MAT_COPY_UNROLL_FACTOR)
+            _data[i] = mat(i, c);
+        }
+        return *this;
+    }
+
+    template <template <class, size_t, size_t, MatType, class...> typename M, typename... _unused, typename T2,
+              MatType type2, size_t rows_, size_t cols_>
+    void col(size_t c, const M<T2, rows_, cols_, type2, _unused...>& mat) {
+        assert(c < n_cols && "Take the specific col by index requires 'The index should be smaller than the number of "
+                             "the matrix's columns.'.");
+        assert(mat.size() == n_rows && "Element number should be n_rows in Mat::col(index, mat).");
+        for (int i = 0; i != mat.size(); ++i) {
+            FLAMES_PRAGMA(UNROLL factor = FLAMES_MAT_COPY_UNROLL_FACTOR)
+            (*this)(i, c) = mat[i];
+        }
+    }
+
+    /**
+     * @brief Take a column of a matrix by index and make a copy.
+     * @note This function makes a copy,
+     *       so if you want to optimize your design,
+     *       always use .col(Mat, int) that takes an argument to avoid copy in place other than initialization.
+     *       They are equivalent in initialization.
+     *       Another choice is to use .col_() which creates a read only view,
+     *       and this operation does not copy.
+     * @details You may configure macro
+     *          `FLAMES_MAT_COPY_UNROLL_FACTOR` or
+     *          `FLAMES_UNROLL_FACTOR` to do the operation in parallel.
+     * @param c The column index.
+     * @return (Mat<T, n_rows, 1, MatType::NORMAL>)(column vector) The certain column vector copy.
+     */
+    Mat<T, n_rows, 1, MatType::NORMAL> col(size_t c) const {
+        assert(c < n_cols && "Take the specific col by index requires 'The index should be smaller than the number of "
+                             "the matrix's columns.'.");
+        Mat<T, n_rows, 1, MatType::NORMAL> mat;
+        for (size_t i = 0; i != n_rows; ++i) {
+            FLAMES_PRAGMA(UNROLL factor = FLAMES_MAT_COPY_UNROLL_FACTOR)
+            mat(i, 0) = (*this)(i, c);
+        }
+        return mat;
+    }
+
+    template <template <class, size_t, size_t, MatType, class...> typename M, typename... _unused, typename T2,
+              MatType type2>
+    MatView& add(const M<T2, n_rows, n_cols, type2, _unused...>& mat_R) {
+        FLAMES_PRAGMA(INLINE)
+        // return this->sub(*this, mat_R);
+        for (size_t i = 0; i != size(); ++i) {
+            FLAMES_PRAGMA(UNROLL factor = FLAMES_MAT_MINUS_UNROLL_FACTOR)
+            _data[i] += mat_R[i];
+        }
+        return *this;
+    }
+
+    template <template <class, size_t, size_t, MatType, class...> typename M, typename... _unused, typename T2,
+              MatType type2>
+    MatView& sub(const M<T2, n_rows, n_cols, type2, _unused...>& mat_R) {
+        FLAMES_PRAGMA(INLINE)
+        // return this->sub(*this, mat_R);
+        for (size_t i = 0; i != size(); ++i) {
+            FLAMES_PRAGMA(UNROLL factor = FLAMES_MAT_MINUS_UNROLL_FACTOR)
+            _data[i] -= mat_R[i];
+        }
+        return *this;
+    }
+
+    MatViewT<T, n_cols, n_rows, type> t_() const { return _data; }
+
+    template <typename Tp = T>
+    Tp power() const {
+        Tp p = 0;
+        for (size_t i = 0; i != size(); ++i) {
+            FLAMES_PRAGMA(UNROLL factor = FLAMES_MAT_POWER_UNROLL_FACTOR)
+            p += static_cast<Tp>(_data[i] * _data[i]);
+        }
+        return p;
+    }
+
+    template <typename Tp = T>
+    Tp abssum() const {
+        Tp p = 0;
+        for (size_t i = 0; i != size(); ++i) {
+            FLAMES_PRAGMA(UNROLL factor = FLAMES_MAT_POWER_UNROLL_FACTOR)
+            auto d = _data[i];
+            if (d > 0) p += static_cast<Tp>(d);
+        }
+        return p;
+    }
+
+    /**
+     * @brief Conversion from view to a real Mat.
+     *
+     * @return (Mat<T, n_rows, n_cols, type>) The real Mat.
+     */
+    operator Mat<T, n_rows, n_cols, type>() const {
+        FLAMES_PRAGMA(INLINE);
+        return Mat<T, n_rows, n_cols, type>(const_cast<const T*>(_data), InitAfterwards::NONE);
+    }
+
+    /**
+     * @brief Explicitly make a Mat copy.
+     *
+     * @return (Mat<T, n_rows, n_cols, type>) The real Mat.
+     */
+    Mat<T, n_rows, n_cols, type> asMat() const {
+        FLAMES_PRAGMA(INLINE);
+        return static_cast<Mat<T, n_rows, n_cols, type>>(*this);
+    }
+
+    void print(const std::string& str = "", std::ostream& os = std::cout) const { this->asMat().print(str, os); }
+
+    //   public: // original private
+  public:
+    const T* const _data;
+};
+
+template <typename T, size_t n_rows, size_t n_cols, MatType type>
+class MatRef {
+  public:
+    /**
+     * @brief Construct a new MatView object from raw data pointer.
+     *
+     * @param m The original matrix.
+     */
+    MatRef(Mat<T, n_rows, n_cols, type>& m) : _data(m.rawDataPtr()) {}
+
+    MatRef(const T* const ptr) : _data(ptr) {}
+
+    /**
+     * @brief Copy constructor.
+     *
+     * @param m Another MatView object.
+     */
+    MatRef(const MatRef& m) : _data(m._data) {}
+
+    /**
+     * @brief The data element number.
+     *
+     * @return (constexpr size_t) The size.
+     */
+    inline static constexpr size_t size() noexcept {
+        return type == MatType::NORMAL     ? n_rows * n_cols
+               : type == MatType::DIAGONAL ? n_rows
+               : type == MatType::SCALAR   ? 1
+               : type == MatType::SUPPER   ? (n_rows - 1) * n_rows / 2
+               : type == MatType::SLOWER   ? (n_rows - 1) * n_rows / 2
+               : type == MatType::ASYM     ? (n_rows - 1) * n_rows / 2
+                                           : (1 + n_rows) * n_rows / 2;
+    }
+
+    MatRef& operator=(const Mat<T, n_rows, n_cols, type>& m) {
         for (size_t i = 0; i != size(); ++i) {
             FLAMES_PRAGMA(UNROLL factor = FLAMES_MAT_COPY_UNROLL_FACTOR)
             _data[i] = m[i];
@@ -7273,7 +7491,7 @@ class MatView {
      */
     template <template <class, size_t, size_t, MatType, class...> typename M, typename... _unused, typename T2,
               MatType type2, size_t rows_, size_t cols_>
-    MatView& col(const M<T2, rows_, cols_, type2, _unused...>& mat, size_t c) {
+    MatRef& col(const M<T2, rows_, cols_, type2, _unused...>& mat, size_t c) {
         assert(c < n_cols && "Take the specific col by index requires 'The index should be smaller than the number of "
                              "the matrix's columns.'.");
         static_assert(size() == rows_, "Element number should be rows_ in Mat::col(mat, index).");
@@ -7323,7 +7541,7 @@ class MatView {
 
     template <template <class, size_t, size_t, MatType, class...> typename M, typename... _unused, typename T2,
               MatType type2>
-    MatView& add(const M<T2, n_rows, n_cols, type2, _unused...>& mat_R) {
+    MatRef& add(const M<T2, n_rows, n_cols, type2, _unused...>& mat_R) {
         FLAMES_PRAGMA(INLINE)
         // return this->sub(*this, mat_R);
         for (size_t i = 0; i != size(); ++i) {
@@ -7335,7 +7553,7 @@ class MatView {
 
     template <template <class, size_t, size_t, MatType, class...> typename M, typename... _unused, typename T2,
               MatType type2>
-    MatView& sub(const M<T2, n_rows, n_cols, type2, _unused...>& mat_R) {
+    MatRef& sub(const M<T2, n_rows, n_cols, type2, _unused...>& mat_R) {
         FLAMES_PRAGMA(INLINE)
         // return this->sub(*this, mat_R);
         for (size_t i = 0; i != size(); ++i) {
@@ -7387,6 +7605,8 @@ class MatView {
         FLAMES_PRAGMA(INLINE);
         return static_cast<Mat<T, n_rows, n_cols, type>>(*this);
     }
+
+    void print(const std::string& str = "", std::ostream& os = std::cout) const { this->asMat().print(str, os); }
 
     //   public: // original private
   public:
@@ -8080,7 +8300,38 @@ class MatViewOffDiag {
     T operator()(size_t r, size_t c) const {
         if (r == c) return T(0);
         constexpr MatType p_type = pType();
-        return (*this)(r, c);
+        if (type == MatType::NORMAL) {
+            return _data[r * N + c];
+        } else if (type == MatType::DIAGONAL) {
+            if (r == c) return _data[r];
+            else return T(0);
+        } else if (type == MatType::SCALAR) {
+            if (r == c) return _data[0];
+            else return T(0);
+        } else if (type == MatType::UPPER) {
+            if (r <= c) return _data[(2 * N + 1 - r) * r / 2 + c - r];
+            else return T(0);
+        } else if (type == MatType::LOWER) {
+            if (r >= c) return _data[(1 + r) * r / 2 + c];
+            else return T(0);
+        } else if (type == MatType::SUPPER) {
+            if (r < c) return _data[(2 * N + 1 - r) * r / 2 + c - 2 * r - 1];
+            else return T(0);
+        } else if (type == MatType::SLOWER) {
+            if (r >= c) return _data[(1 + r) * r / 2 + c - r];
+            else return T(0);
+        } else if (type == MatType::SYM) {
+            if (r <= c) return _data[(2 * N + 1 - r) * r / 2 + c - r];
+            else return _data[(2 * N + 1 - c) * c / 2 + r - c];
+        } else if (type == MatType::ASYM) {
+            if (r < c) return _data[(2 * N + 1 - r) * r / 2 + c - r * 2 - 1];
+            else if (r > c) return -_data[(2 * N + 1 - c) * c / 2 + r - c * 2 - 1];
+            else return T(0);
+        } else {
+            // Normally it is impossible to reach here.
+            assert(!"Impossible! Unknown MatType!");
+            return T(0);
+        }
     }
 
     /**
@@ -8105,7 +8356,7 @@ class MatViewOffDiag {
         for (size_t i = 0; i != N * N; ++i) {
             FLAMES_PRAGMA(UNROLL factor = FLAMES_MAT_COPY_UNROLL_FACTOR)
             if (i % (N + 1) == 0) mat[i] = 0;
-            else mat[i] = this->_m[i];
+            else mat[i] = this->_data[i];
         }
         return mat;
     }
@@ -8129,7 +8380,7 @@ class MatViewOffDiag {
     const T* _data;
 };
 
-template <size_t Index, typename T, size_t n_rows, size_t n_cols, MatType type, typename type_parent>
+template <typename T, size_t n_rows, size_t n_cols, MatType type, typename type_parent>
 class MatViewCol {
   public:
     /**
@@ -8137,10 +8388,10 @@ class MatViewCol {
      *
      * @param m The original matrix.
      */
-    MatViewCol(const Mat<T, n_rows, n_cols, matType<type_parent>()>& m) : _data(m.rawDataPtr()) {
-        static_assert(Index < n_cols, "Take the specific col by index requires 'The index should be smaller than the "
-                                      "number of the matrix's cols.'");
-        static_assert(Index > 0, "Take the specific col by index requires 'The index can't be smaller than 0.'");
+    MatViewCol(const Mat<T, n_rows, n_cols, matType<type_parent>()>& m, size_t index) : _data(m.rawDataPtr() + index) {
+        static_assert(type == MatType::NORMAL, "We only support limited matType.");
+        assert(index < n_cols && "Take the specific col by index requires 'The index should be smaller than the number "
+                                 "of the matrix's cols.'");
     }
 
     /**
@@ -8155,15 +8406,7 @@ class MatViewCol {
      *
      * @return (constexpr size_t) The size.
      */
-    inline static constexpr size_t size() noexcept {
-        return type == MatType::NORMAL     ? n_rows * n_cols
-               : type == MatType::DIAGONAL ? n_rows
-               : type == MatType::SCALAR   ? 1
-               : type == MatType::SUPPER   ? (n_rows - 1) * n_rows / 2
-               : type == MatType::SLOWER   ? (n_rows - 1) * n_rows / 2
-               : type == MatType::ASYM     ? (n_rows - 1) * n_rows / 2
-                                           : (1 + n_rows) * n_rows / 2;
-    }
+    inline static constexpr size_t size() noexcept { return n_rows; }
 
     /**
      * @brief Parent matrix as MatType.
@@ -8181,38 +8424,15 @@ class MatViewCol {
      */
     T operator()(size_t r, size_t c) const {
         assert(c == 0 && "Column vector's column index should always be 0.");
+        assert(r < n_rows && "Matrix row index should be within range");
         constexpr MatType p_type = pType();
         if (p_type == MatType::NORMAL) {
-            return _data[r * n_cols + Index];
-        } else if (p_type == MatType::DIAGONAL) {
-            if (r == Index) return _data[r];
-            else return T(0);
-        } else if (p_type == MatType::SCALAR) {
-            if (r == Index) return _data[0];
-            else return T(0);
-        } else if (p_type == MatType::UPPER) {
-            if (r <= Index) return _data[(2 * n_cols + 1 - r) * r / 2 + Index - r];
-            else return T(0);
-        } else if (p_type == MatType::LOWER) {
-            if (r >= Index) return _data[(1 + r) * r / 2 + Index];
-            else return T(0);
-        } else if (p_type == MatType::SUPPER) {
-            if (r < Index) return _data[(2 * n_cols + 1 - r) * r / 2 + Index - 2 * r - 1];
-            else return T(0);
-        } else if (p_type == MatType::SLOWER) {
-            if (r >= Index) return _data[(1 + r) * r / 2 + Index - r];
-            else return T(0);
-        } else if (p_type == MatType::SYM) {
-            if (r <= Index) return _data[(2 * n_cols + 1 - r) * r / 2 + Index - r];
-            else return _data[(2 * n_cols + 1 - Index) * Index / 2 + r - Index];
-        } else if (p_type == MatType::ASYM) {
-            if (r < Index) return -_data[(2 * n_cols + 1 - r) * r / 2 + Index - r * 2 - 1];
-            else if (r > Index) return _data[(2 * n_cols + 1 - Index) * Index / 2 + r - Index * 2 - 1];
-            else return T(0);
+            return _data[r * n_cols];
         } else {
             // Normally it is impossible to reach here.
             assert(!"Impossible! Unknown MatType!");
         }
+        return _data[0];
     }
 
     /**
@@ -8257,50 +8477,62 @@ class MatViewCol {
         return static_cast<Vec<T, n_rows>>(*this);
     }
 
+    void print(const std::string& str = "", std::ostream& os = std::cout) const { this->asMat().print(str, os); }
+
   public: // original private
     /**
      * @brief Raw data pointer.
      *
      * @note This contents will not be modified.
      */
-    const T* _data;
+    const T* const _data;
 };
 
-template <size_t Index, typename T, size_t n_rows, size_t n_cols, MatType type, typename type_parent>
-class MatViewRow {
+template <typename T, size_t n_rows, size_t n_cols, MatType type, typename type_parent>
+class MatRefCol {
   public:
     /**
-     * @brief Construct a new MatViewRow object from raw data pointer.
+     * @brief Construct a new MatRefCol object from raw data pointer.
      *
      * @param m The original matrix.
      */
-    MatViewRow(const Mat<T, n_cols, n_rows, matType<type_parent>()>& m) : _data(m.rawDataPtr()) {
-        static_assert(Index < n_rows, "Take the specific row by index requires 'The index should be smaller than the "
-                                      "number of the matrix's rows.'");
-        static_assert(Index > 0, "Take the specific row by index requires 'The index can't be smaller than 0.'");
+    MatRefCol(Mat<T, n_rows, n_cols, matType<type_parent>()>& m, size_t index) : _data(m.rawDataPtr() + index) {
+        static_assert(type == MatType::NORMAL, "We only support limited matType.");
+        assert(index < n_cols && "Take the specific col by index requires 'The index should be smaller than the number "
+                                 "of the matrix's cols.'");
     }
 
     /**
      * @brief Copy constructor.
      *
-     * @param m Another MatViewRow object.
+     *
+     * @param m Another MatViewCol object.
      */
-    MatViewRow(const MatViewRow& m) : _data(m._data) {}
+    MatRefCol(const MatRefCol& m) : _data(m._data) {}
+
+    template <typename T_, size_t n_rows_, size_t n_cols_, MatType type_>
+    MatRefCol& operator=(const Mat<T_, n_rows_, n_cols_, type_>& m) {
+        for (size_t i = 0; i != size(); ++i) {
+            FLAMES_PRAGMA(UNROLL factor = FLAMES_MAT_COPY_UNROLL_FACTOR)
+            _data[i * n_rows] = m[i];
+        }
+        return *this;
+    }
+
+    template <typename M>
+    void assign(M m) {
+        for (size_t i = 0; i != size(); ++i) {
+            FLAMES_PRAGMA(UNROLL factor = FLAMES_MAT_COPY_UNROLL_FACTOR)
+            _data[i * n_rows] = m[i];
+        }
+    }
 
     /**
      * @brief The data element number.
      *
      * @return (constexpr size_t) The size.
      */
-    inline static constexpr size_t size() noexcept {
-        return type == MatType::NORMAL     ? n_rows * n_cols
-               : type == MatType::DIAGONAL ? n_rows
-               : type == MatType::SCALAR   ? 1
-               : type == MatType::SUPPER   ? (n_rows - 1) * n_rows / 2
-               : type == MatType::SLOWER   ? (n_rows - 1) * n_rows / 2
-               : type == MatType::ASYM     ? (n_rows - 1) * n_rows / 2
-                                           : (1 + n_rows) * n_rows / 2;
-    }
+    inline static constexpr size_t size() noexcept { return n_rows; }
 
     /**
      * @brief Parent matrix as MatType.
@@ -8317,39 +8549,29 @@ class MatViewRow {
      * @return (T) The element value.
      */
     T operator()(size_t r, size_t c) const {
-        assert(r == 0 && "Row vector's row index should always be 0.");
+        assert(c == 0 && "Column vector's column index should always be 0.");
+        assert(r < n_rows && "Matrix row index should be within range");
         constexpr MatType p_type = pType();
         if (p_type == MatType::NORMAL) {
-            return _data[Index * n_cols + c];
-        } else if (p_type == MatType::DIAGONAL) {
-            if (Index == c) return _data[Index];
-            else return T(0);
-        } else if (p_type == MatType::SCALAR) {
-            if (Index == c) return _data[0];
-            else return T(0);
-        } else if (p_type == MatType::UPPER) {
-            if (Index <= c) return _data[(2 * n_cols + 1 - Index) * Index / 2 + c - Index];
-            else return T(0);
-        } else if (p_type == MatType::LOWER) {
-            if (Index >= c) return _data[(1 + Index) * Index / 2 + c];
-            else return T(0);
-        } else if (p_type == MatType::SUPPER) {
-            if (Index < c) return _data[(2 * n_cols + 1 - Index) * Index / 2 + c - 2 * Index - 1];
-            else return T(0);
-        } else if (p_type == MatType::SLOWER) {
-            if (Index >= c) return _data[(1 + Index) * Index / 2 + c - Index];
-            else return T(0);
-        } else if (p_type == MatType::SYM) {
-            if (Index <= c) return _data[(2 * n_cols + 1 - Index) * Index / 2 + c - Index];
-            else return _data[(2 * n_cols + 1 - c) * c / 2 + Index - c];
-        } else if (p_type == MatType::ASYM) {
-            if (Index < c) return -_data[(2 * n_cols + 1 - Index) * Index / 2 + c - Index * 2 - 1];
-            else if (Index > c) return _data[(2 * n_cols + 1 - c) * c / 2 + Index - c * 2 - 1];
-            else return T(0);
+            return _data[r * n_cols];
         } else {
             // Normally it is impossible to reach here.
             assert(!"Impossible! Unknown MatType!");
         }
+        return _data[0];
+    }
+
+    T& operator()(size_t r, size_t c) {
+        assert(c == 0 && "Column vector's column index should always be 0.");
+        assert(r < n_rows && "Matrix row index should be within range");
+        constexpr MatType p_type = pType();
+        if (p_type == MatType::NORMAL) {
+            return _data[r * n_cols];
+        } else {
+            // Normally it is impossible to reach here.
+            assert(!"Impossible! Unknown MatType!");
+        }
+        return _data[0];
     }
 
     /**
@@ -8358,17 +8580,18 @@ class MatViewRow {
      * @param index The index.
      * @return (T) The data.
      */
-    T operator[](size_t index) const { return (*this)(0, index); }
+    T operator[](size_t index) const { return (*this)(index, 0); }
+
+    T& operator[](size_t index) { return (*this)(index, 0); }
 
     /**
      * @brief Conversion from view to a real Mat.
-     *
-     * @return (RowVec<T, n_cols>) The real Mat.
+     * @return (RowVec<T, n_rows>) The real Mat.
      */
-    operator RowVec<T, n_cols>() const {
-        RowVec<T, n_cols> mat;
-    MAT_COPY_ROW:
-        for (size_t i = 0; i != n_cols; ++i) {
+    operator Vec<T, n_rows>() const {
+        Vec<T, n_rows> mat;
+    MAT_COPY_COL:
+        for (size_t i = 0; i != n_rows; ++i) {
             FLAMES_PRAGMA(UNROLL factor = FLAMES_MAT_COPY_UNROLL_FACTOR)
             mat[i] = (*this)[i];
         }
@@ -8378,22 +8601,24 @@ class MatViewRow {
     /**
      * @brief Explicitly make a Mat copy.
      *
-     * @return (RowVec<T, n_cols>) The real Mat.
+     * @return (Vec<T, n_rows>) The real Mat.
      */
-    RowVec<T, n_cols> asMat() const {
+    Vec<T, n_rows> asMat() const {
         FLAMES_PRAGMA(INLINE);
-        return static_cast<RowVec<T, n_cols>>(*this);
+        return static_cast<Vec<T, n_rows>>(*this);
     }
 
     /**
-     * @brief Explicitly make a Mat (RowVec) copy.
+     * @brief Explicitly make a Mat (Vec) copy.
      *
-     * @return (RowVec<T, n_cols>) The real Mat.
+     * @return (Vec<T, n_rows>) The real Mat.
      */
-    RowVec<T, n_cols> asRowVec() const {
+    Vec<T, n_rows> asVec() const {
         FLAMES_PRAGMA(INLINE);
-        return static_cast<RowVec<T, n_cols>>(*this);
+        return static_cast<Vec<T, n_rows>>(*this);
     }
+
+    void print(const std::string& str = "", std::ostream& os = std::cout) const { this->asMat().print(str, os); }
 
   public: // original private
     /**
@@ -8401,7 +8626,7 @@ class MatViewRow {
      *
      * @note This contents will not be modified.
      */
-    const T* _data;
+    T* const _data;
 };
 
 template <size_t first_col, size_t last_col, typename T, size_t n_rows, size_t n_cols, MatType type,
@@ -8680,263 +8905,6 @@ class MatViewRows {
      * @note This contents will not be modified.
      */
     const T* _data;
-};
-
-template <size_t Cols, typename T, typename M, size_t n_rows, size_t n_cols, MatType type, typename type_parent>
-class MatViewColsContainer {
-  public:
-    /**
-     * @brief Construct a new MatViewColsContainer object from a matrix raw data pointer and a container data pointer.
-     *
-     * @param m The original matrix.
-     */
-    MatViewColsContainer(const Mat<T, n_rows, n_cols, matType<type_parent>()>& m, const M Container)
-        : _data(m.rawDataPtr()), container(Container) {}
-
-    /**
-     * @brief Copy constructor.
-     *
-     * @param m Another MatViewColsContainer object.
-     */
-    MatViewColsContainer(const MatViewColsContainer& m) : _data(m._data), container(m.container) {}
-
-    /**
-     * @brief The data element number.
-     *
-     * @return (constexpr size_t) The size.
-     */
-    inline static constexpr size_t size() noexcept {
-        return type == MatType::NORMAL     ? n_rows * n_cols
-               : type == MatType::DIAGONAL ? n_rows
-               : type == MatType::SCALAR   ? 1
-               : type == MatType::SUPPER   ? (n_rows - 1) * n_rows / 2
-               : type == MatType::SLOWER   ? (n_rows - 1) * n_rows / 2
-               : type == MatType::ASYM     ? (n_rows - 1) * n_rows / 2
-                                           : (1 + n_rows) * n_rows / 2;
-    }
-
-    /**
-     * @brief Parent matrix as MatType.
-     *
-     * @return (constexpr MatType) The MatType.
-     */
-    inline static constexpr MatType pType() noexcept { return matType<type_parent>(); }
-
-    /**
-     * @brief Get the read only data element from row and column index.
-     *
-     * @param r The row index.
-     * @param c The column index.
-     * @return (T) The element value.
-     */
-    T operator()(size_t r, size_t c) const {
-        assert(c < Cols && "The col index must be small than the number of the discrete columns .");
-        assert(r < n_rows && "The row index should be smaller than the number of the matrix's rows.");
-        assert(container[c] < n_cols && "The container index should be small than the number of the matrix's col.");
-        constexpr MatType p_type = pType();
-        if (type == MatType::NORMAL) {
-            return _data[r * n_cols + container[c]];
-        } else if (type == MatType::DIAGONAL) {
-            if (r == container[c]) return _data[r];
-            else return T(0);
-        } else if (type == MatType::SCALAR) {
-            if (r == container[c]) return _data[0];
-            else return T(0);
-        } else if (type == MatType::UPPER) {
-            if (r <= container[c]) return _data[(2 * n_cols + 1 - r) * r / 2 + container[c] - r];
-            else return T(0);
-        } else if (type == MatType::LOWER) {
-            if (r >= container[c]) return _data[(1 + r) * r / 2 + container[c]];
-            else return T(0);
-        } else if (type == MatType::SUPPER) {
-            if (r < container[c]) return _data[(2 * n_cols + 1 - r) * r / 2 + container[c] - 2 * r - 1];
-            else return T(0);
-        } else if (type == MatType::SLOWER) {
-            if (r >= container[c]) return _data[(1 + r) * r / 2 + container[c] - r];
-            else return T(0);
-        } else if (type == MatType::SYM) {
-            if (r <= container[c]) return _data[(2 * n_cols + 1 - r) * r / 2 + container[c] - r];
-            else return _data[(2 * n_cols + 1 - container[c]) * container[c] / 2 + r - container[c]];
-        } else if (type == MatType::ASYM) {
-            if (r < container[c]) return _data[(2 * n_cols + 1 - r) * r / 2 + container[c] - r * 2 - 1];
-            else if (r > container[c])
-                return -_data[(2 * n_cols + 1 - container[c]) * container[c] / 2 + r - container[c] * 2 - 1];
-            else return T(0);
-        } else {
-            // Normally it is impossible to reach here.
-            assert(!"Impossible! Unknown MatType!");
-        }
-    }
-
-    /**
-     * @brief Get the read only element by array row major index.
-     *
-     * @param index The index.
-     * @return (T) The data.
-     */
-    T operator[](size_t index) const { return (*this)(index / Cols, index % Cols); }
-
-    /**
-     * @brief Conversion from view to a real Mat.
-     * @return (Mat<T, n_rows, Cols, MatType::NORMAL>) The real Mat.
-     */
-    operator Mat<T, n_rows, Cols, MatType::NORMAL>() const {
-        Mat<T, n_rows, Cols, MatType::NORMAL> mat;
-    MAT_COPY_COLS:
-        for (size_t i = 0; i != n_rows * (Cols); ++i) {
-            FLAMES_PRAGMA(UNROLL factor = FLAMES_MAT_COPY_UNROLL_FACTOR)
-            mat[i] = (*this)[i];
-        }
-        return mat;
-    }
-
-    /**
-     * @brief Explicitly make a Mat copy.
-     *
-     * @return (Mat<T, n_rows, Cols, MatType::NORMAL>) The real Mat.
-     */
-    Mat<T, n_rows, Cols, MatType::NORMAL> asMat() const {
-        FLAMES_PRAGMA(INLINE);
-        return static_cast<Mat<T, n_rows, Cols, MatType::NORMAL>>(*this);
-    }
-
-  public: // original private
-    /**
-     * @brief Matrix raw data pointer.
-     * @brief Container.
-     * @note This contents will not be modified.
-     */
-    const T* _data;
-    const M container;
-};
-
-template <size_t Rows, typename T, typename M, size_t n_rows, size_t n_cols, MatType type, typename type_parent>
-class MatViewRowsContainer {
-  public:
-    /**
-     * @brief Construct a new MatViewRowsContainer object from a matrix raw data pointer and a container data pointer.
-     *
-     * @param m The original matrix.
-     */
-    MatViewRowsContainer(const Mat<T, n_rows, n_cols, matType<type_parent>()>& m, const M Container)
-        : _data(m.rawDataPtr()), container(Container) {}
-
-    /**
-     * @brief Copy constructor.
-     *
-     * @param m Another MatViewRowsContainer object.
-     */
-    MatViewRowsContainer(const MatViewRowsContainer& m) : _data(m._data), container(m.container) {}
-
-    /**
-     * @brief The data element number.
-     *
-     * @return (constexpr size_t) The size.
-     */
-    inline static constexpr size_t size() noexcept {
-        return type == MatType::NORMAL     ? n_rows * n_cols
-               : type == MatType::DIAGONAL ? n_rows
-               : type == MatType::SCALAR   ? 1
-               : type == MatType::SUPPER   ? (n_rows - 1) * n_rows / 2
-               : type == MatType::SLOWER   ? (n_rows - 1) * n_rows / 2
-               : type == MatType::ASYM     ? (n_rows - 1) * n_rows / 2
-                                           : (1 + n_rows) * n_rows / 2;
-    }
-
-    /**
-     * @brief Parent matrix as MatType.
-     *
-     * @return (constexpr MatType) The MatType.
-     */
-    inline static constexpr MatType pType() noexcept { return matType<type_parent>(); }
-
-    /**
-     * @brief Get the read only data element from row and column index.
-     *
-     * @param r The row index.
-     * @param c The column index.
-     * @return (T) The element value.
-     */
-    T operator()(size_t r, size_t c) const {
-        assert(c < n_cols && "The col index must be small than the number of the matrix's column.");
-        assert(r < Rows && "The row index should be smaller than the number of the discrete rows .");
-        assert(container[r] < n_rows && "The container index should be small than the number of the matrix's row ");
-        constexpr MatType p_type = pType();
-        if (type == MatType::NORMAL) {
-            return _data[container[r] * n_cols + c];
-        } else if (type == MatType::DIAGONAL) {
-            if (container[r] == c) return _data[c];
-            else return T(0);
-        } else if (type == MatType::SCALAR) {
-            if (container[r] == c) return _data[0];
-            else return T(0);
-        } else if (type == MatType::UPPER) {
-            if (container[r] <= c) return _data[(2 * n_cols + 1 - container[r]) * container[r] / 2 + c - container[r]];
-            else return T(0);
-        } else if (type == MatType::LOWER) {
-            if (container[r] >= c) return _data[(1 + container[r]) * container[r] / 2 + c];
-            else return T(0);
-        } else if (type == MatType::SUPPER) {
-            if (container[r] < c)
-                return _data[(2 * n_cols + 1 - container[r]) * container[r] / 2 + c - 2 * container[r] - 1];
-            else return T(0);
-        } else if (type == MatType::SLOWER) {
-            if (container[r] >= c) return _data[(1 + container[r]) * container[r] / 2 + c - r];
-            else return T(0);
-        } else if (type == MatType::SYM) {
-            if (container[r] <= c) return _data[(2 * n_cols + 1 - container[r]) * container[r] / 2 + c - container[r]];
-            else return _data[(2 * n_cols + 1 - c) * c / 2 + container[r] - c];
-        } else if (type == MatType::ASYM) {
-            if (container[r] < c)
-                return _data[(2 * n_cols + 1 - container[r]) * container[r] / 2 + c - container[r] * 2 - 1];
-            else if (container[r] > c) return -_data[(2 * n_cols + 1 - c) * c / 2 + container[r] - c * 2 - 1];
-            else return T(0);
-        } else {
-            // Normally it is impossible to reach here.
-            assert(!"Impossible! Unknown MatType!");
-        }
-    }
-
-    /**
-     * @brief Get the read only element by array row major index.
-     *
-     * @param index The index.
-     * @return (T) The data.
-     */
-    T operator[](size_t index) const { return (*this)(index / n_cols, index % n_cols); }
-
-    /**
-     * @brief Conversion from view to a real Mat.
-     * @return (Mat<T, Rows, n_cols, MatType::NORMAL>) The real Mat.
-     */
-    operator Mat<T, Rows, n_cols, MatType::NORMAL>() const {
-        Mat<T, Rows, n_cols, MatType::NORMAL> mat;
-    MAT_COPY_ROWS:
-        for (size_t i = 0; i != n_cols * Rows; ++i) {
-            FLAMES_PRAGMA(UNROLL factor = FLAMES_MAT_COPY_UNROLL_FACTOR)
-            mat[i] = (*this)[i];
-        }
-        return mat;
-    }
-
-    /**
-     * @brief Explicitly make a Mat copy.
-     *
-     * @return (Mat<T, Rows, n_cols, MatType::NORMAL>) The real Mat.
-     */
-    Mat<T, Rows, n_cols, MatType::NORMAL> asMat() const {
-        FLAMES_PRAGMA(INLINE);
-        return static_cast<Mat<T, Rows, n_cols, MatType::NORMAL>>(*this);
-    }
-
-  public: // original private
-    /**
-     * @brief Matrix raw data pointer.
-     * @brief Container.
-     * @note This contents will not be modified.
-     */
-    const T* _data;
-    const M container;
 };
 
 /**
