@@ -27,5 +27,8 @@ using namespace flames;
 ```
 to access classes `Mat`, etc. directly instead of `flames::Mat`.
 
+### Additional Insights
+You can find more information about FLAMES in [`FLAMES_Insight.pdf`](https://flames.autohdw.com/FLAMES_Insight.pdf).
+
 ## License
 The FLAMES is open source and distributed by an Apache license (v2.0).
