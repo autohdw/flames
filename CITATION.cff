@@ -1,0 +1,52 @@
+cff-version: 1.2.0
+message: "If you find FLAMES useful in your research, please cite it as below."
+authors:
+- family-names: Zhao
+  given-names: Wuqiong
+  orcid: https://orcid.org/0000-0002-9550-7423
+- family-names: Li
+  given-names: Changhan
+- family-names: Ji 
+  given-names: Zhenhao
+- family-names: Guo
+  given-names: Zhichen  
+- family-names: Chen
+  given-names: Xuanbo
+- family-names: You
+  given-names: You
+- family-names: Huang
+  given-names: Yongming
+- family-names: You
+  given-names: Xiaohu
+- family-names: Zhang
+  given-names: Chuan
+title: FLAMES
+version: 0.1.0
+license: Apache-2.0
+date-released: 2023-07-10
+url: https://github.com/autohdw/flames
+preferred-citation:
+  type: article
+  authors:
+  - family-names: Zhao
+    given-names: Wuqiong
+    orcid: https://orcid.org/0000-0002-9550-7423
+  - family-names: Li
+    given-names: Changhan
+  - family-names: Ji 
+    given-names: Zhenhao
+  - family-names: Guo
+    given-names: Zhichen  
+  - family-names: Chen
+    given-names: Xuanbo
+  - family-names: You
+    given-names: You
+  - family-names: Huang
+    given-names: Yongming
+  - family-names: You
+    given-names: Xiaohu
+  - family-names: Zhang
+    given-names: Chuan
+  title: Flexible High-Level Synthesis Library for Linear Transformations
+  date-released: 2023-10-10
+  journal: "IEEE Transactions on Circuits and Systems II: Express Briefs"
