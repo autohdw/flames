@@ -3,7 +3,7 @@
  * @author Wuqiong Zhao (me@wqzhao.org), et al.
  * @brief Core Utilities for FLAMES
  * @version 0.1.0
- * @date 2023-07-15
+ * @date 2023-10-23
  *
  * @copyright Copyright (c) 2022-2023 Wuqiong Zhao
  *
@@ -7894,6 +7894,21 @@ class MatViewDiagMat {
     MatViewDiagMat(const MatViewDiagMat& m) : _data(m._data) {}
 
     /**
+     * @brief Return a inverse matrix.
+     *
+     * @return (Mat<T, N, N, MatType::DIAGONAL>) The inversed matrix.
+     */
+    Mat<T, N, N, MatType::DIAGONAL> inv() const {
+        Mat<T, N, N, MatType::DIAGONAL> mat;
+    MATVIEWDIAGMAT_INV:
+        for (size_t i = 0; i != N; ++i) {
+            FLAMES_PRAGMA(UNROLL factor = FLAMES_MAT_COPY_UNROLL_FACTOR)
+            mat[i] = static_cast<T>(1) / (*this)[i];
+        }
+        return mat;
+    }
+
+    /**
      * @brief The data element number.
      *
      * @return (constexpr size_t) The size.
@@ -8027,6 +8042,21 @@ class MatViewDiagVec {
                : type == MatType::SLOWER   ? (N - 1) * N / 2
                : type == MatType::ASYM     ? (N - 1) * N / 2
                                            : (1 + N) * N / 2;
+    }
+
+    /**
+     * @brief Return a inverse matrix.
+     *
+     * @return (Vec<T, N>) The inversed matrix.
+     */
+    Vec<T, N> inv() const {
+        Vec<T, N> mat;
+    MATVIEWDIAGVEC_INV:
+        for (size_t i = 0; i != N; ++i) {
+            FLAMES_PRAGMA(UNROLL factor = FLAMES_MAT_COPY_UNROLL_FACTOR)
+            mat[i] = static_cast<T>(1) / (*this)[i];
+        }
+        return mat;
     }
 
     /**
@@ -8445,7 +8475,7 @@ class MatViewCol {
 
     /**
      * @brief Conversion from view to a real Mat.
-     * @return (RowVec<T, n_rows>) The real Mat.
+     * @return (Vec<T, n_rows>) The real Mat.
      */
     operator Vec<T, n_rows>() const {
         Vec<T, n_rows> mat;
@@ -8489,6 +8519,115 @@ class MatViewCol {
 };
 
 template <typename T, size_t n_rows, size_t n_cols, MatType type, typename type_parent>
+class MatViewRow {
+  public:
+    /**
+     * @brief Construct a new MatViewRow object from raw data pointer.
+     *
+     * @param m The original matrix.
+     */
+    MatViewRow(const Mat<T, n_rows, n_cols, matType<type_parent>()>& m, size_t index)
+        : _data(m.rawDataPtr() + index * n_cols) {
+        static_assert(type == MatType::NORMAL, "We only support limited matType.");
+        assert(index < n_rows && "Take the specific row by index requires 'The index should be smaller than the number "
+                                 "of the matrix's rows.'");
+    }
+
+    /**
+     * @brief Copy constructor.
+     *
+     * @param m Another MatViewRow object.
+     */
+    MatViewRow(const MatViewRow& m) : _data(m._data) {}
+
+    /**
+     * @brief The data element number.
+     *
+     * @return (constexpr size_t) The size.
+     */
+    inline static constexpr size_t size() noexcept { return n_cols; }
+
+    /**
+     * @brief Parent matrix as MatType.
+     *
+     * @return (constexpr MatType) The MatType.
+     */
+    inline static constexpr MatType pType() noexcept { return matType<type_parent>(); }
+
+    /**
+     * @brief Get the read only data element from row and column index.
+     *
+     * @param r The row index.
+     * @param c The column index.
+     * @return (T) The element value.
+     */
+    T operator()(size_t r, size_t c) const {
+        assert(r == 0 && "Row vector's row index should always be 0.");
+        assert(c < n_cols && "Matrix column index should be within range");
+        constexpr MatType p_type = pType();
+        if (p_type == MatType::NORMAL) {
+            return _data[c];
+        } else {
+            // Normally it is impossible to reach here.
+            assert(!"Impossible! Unknown MatType!");
+        }
+        return _data[0];
+    }
+
+    /**
+     * @brief Get the read only element by array row major index.
+     *
+     * @param index The index.
+     * @return (T) The data.
+     */
+    T operator[](size_t index) const { return (*this)(0, index); }
+
+    /**
+     * @brief Conversion from view to a real Mat.
+     * @return (RowVec<T, n_cols>) The real Mat.
+     */
+    operator RowVec<T, n_rows>() const {
+        RowVec<T, n_cols> mat;
+    MAT_COPY_ROW:
+        for (size_t i = 0; i != n_cols; ++i) {
+            FLAMES_PRAGMA(UNROLL factor = FLAMES_MAT_COPY_UNROLL_FACTOR)
+            mat[i] = (*this)[i];
+        }
+        return mat;
+    }
+
+    /**
+     * @brief Explicitly make a Mat copy.
+     *
+     * @return (RowVec<T, n_cols>) The real Mat.
+     */
+    RowVec<T, n_cols> asMat() const {
+        FLAMES_PRAGMA(INLINE);
+        return static_cast<RowVec<T, n_cols>>(*this);
+    }
+
+    /**
+     * @brief Explicitly make a Mat (RowVec) copy.
+     *
+     * @return (RowVec<T, n_cols>) The real Mat.
+     */
+    Vec<T, n_rows> asRowVec() const {
+        FLAMES_PRAGMA(INLINE);
+        return static_cast<Vec<T, n_cols>>(*this);
+    }
+
+    void print(const std::string& str = "", std::ostream& os = std::cout) const { this->asMat().print(str, os); }
+
+  public: // original private
+    /**
+     * @brief Raw data pointer.
+     *
+     * @note This contents will not be modified.
+     */
+    const T* const _data;
+};
+
+template <typename T, size_t n_rows, size_t n_cols, MatType type, typename type_parent>
 class MatRefCol {
   public:
     /**
@@ -8506,7 +8645,7 @@ class MatRefCol {
      * @brief Copy constructor.
      *
      *
-     * @param m Another MatViewCol object.
+     * @param m Another MatRefCol object.
      */
     MatRefCol(const MatRefCol& m) : _data(m._data) {}
 
@@ -8616,6 +8755,148 @@ class MatRefCol {
     Vec<T, n_rows> asVec() const {
         FLAMES_PRAGMA(INLINE);
         return static_cast<Vec<T, n_rows>>(*this);
+    }
+
+    void print(const std::string& str = "", std::ostream& os = std::cout) const { this->asMat().print(str, os); }
+
+  public: // original private
+    /**
+     * @brief Raw data pointer.
+     *
+     * @note This contents will not be modified.
+     */
+    T* const _data;
+};
+
+template <typename T, size_t n_rows, size_t n_cols, MatType type, typename type_parent>
+class MatRefRow {
+  public:
+    /**
+     * @brief Construct a new MatRefRow object from raw data pointer.
+     *
+     * @param m The original matrix.
+     */
+    MatRefRow(Mat<T, n_rows, n_cols, matType<type_parent>()>& m, size_t index)
+        : _data(m.rawDataPtr() + index * n_cols) {
+        static_assert(type == MatType::NORMAL, "We only support limited matType.");
+        assert(index < n_rows && "Take the specific row by index requires 'The index should be smaller than the number "
+                                 "of the matrix's rows.'");
+    }
+
+    /**
+     * @brief Copy constructor.
+     *
+     *
+     * @param m Another MatRefRow object.
+     */
+    MatRefRow(const MatRefRow& m) : _data(m._data) {}
+
+    template <typename T_, size_t n_rows_, size_t n_cols_, MatType type_>
+    MatRefRow& operator=(const Mat<T_, n_rows_, n_cols_, type_>& m) {
+        for (size_t i = 0; i != size(); ++i) {
+            FLAMES_PRAGMA(UNROLL factor = FLAMES_MAT_COPY_UNROLL_FACTOR)
+            _data[i] = m[i];
+        }
+        return *this;
+    }
+
+    template <typename M>
+    void assign(M m) {
+        for (size_t i = 0; i != size(); ++i) {
+            FLAMES_PRAGMA(UNROLL factor = FLAMES_MAT_COPY_UNROLL_FACTOR)
+            _data[i] = m[i];
+        }
+    }
+
+    /**
+     * @brief The data element number.
+     *
+     * @return (constexpr size_t) The size.
+     */
+    inline static constexpr size_t size() noexcept { return n_cols; }
+
+    /**
+     * @brief Parent matrix as MatType.
+     *
+     * @return (constexpr MatType) The MatType.
+     */
+    inline static constexpr MatType pType() noexcept { return matType<type_parent>(); }
+
+    /**
+     * @brief Get the read only data element from row and column index.
+     *
+     * @param r The row index.
+     * @param c The column index.
+     * @return (T) The element value.
+     */
+    T operator()(size_t r, size_t c) const {
+        assert(r == 0 && "Row vector's row index should always be 0.");
+        assert(c < n_cols && "Matrix column index should be within range");
+        constexpr MatType p_type = pType();
+        if (p_type == MatType::NORMAL) {
+            return _data[c];
+        } else {
+            // Normally it is impossible to reach here.
+            assert(!"Impossible! Unknown MatType!");
+        }
+        return _data[0];
+    }
+
+    T& operator()(size_t r, size_t c) {
+        assert(r == 0 && "Row vector's row index should always be 0.");
+        assert(c < n_cols && "Matrix column index should be within range");
+        constexpr MatType p_type = pType();
+        if (p_type == MatType::NORMAL) {
+            return _data[c];
+        } else {
+            // Normally it is impossible to reach here.
+            assert(!"Impossible! Unknown MatType!");
+        }
+        return _data[0];
+    }
+
+    /**
+     * @brief Get the read only element by array row major index.
+     *
+     * @param index The index.
+     * @return (T) The data.
+     */
+    T operator[](size_t index) const { return (*this)(0, index); }
+
+    T& operator[](size_t index) { return (*this)(0, index); }
+
+    /**
+     * @brief Conversion from view to a real Mat.
+     * @return (RowVec<T, n_cols>) The real Mat.
+     */
+    operator RowVec<T, n_cols>() const {
+        RowVec<T, n_cols> mat;
+    MAT_COPY_ROW:
+        for (size_t i = 0; i != n_cols; ++i) {
+            FLAMES_PRAGMA(UNROLL factor = FLAMES_MAT_COPY_UNROLL_FACTOR)
+            mat[i] = (*this)[i];
+        }
+        return mat;
+    }
+
+    /**
+     * @brief Explicitly make a Mat copy.
+     *
+     * @return (RowVec<T, n_cols>) The real Mat.
+     */
+    RowVec<T, n_cols> asMat() const {
+        FLAMES_PRAGMA(INLINE);
+        return static_cast<RowVec<T, n_cols>>(*this);
+    }
+
+    /**
+     * @brief Explicitly make a Mat (RowVec) copy.
+     *
+     * @return (RowVec<T, n_cols>) The real Mat.
+     */
+    RowVec<T, n_cols> asVec() const {
+        FLAMES_PRAGMA(INLINE);
+        return static_cast<RowVec<T, n_cols>>(*this);
     }
 
     void print(const std::string& str = "", std::ostream& os = std::cout) const { this->asMat().print(str, os); }
