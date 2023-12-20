@@ -4,7 +4,7 @@ Flexible Linear Algebra with Matrix-Empowered Synthesis (for Vitis HLS)
 Developed by [Wuqiong Zhao](https://wqzhao.org) and other contributors,
 from LEADS, Southeast University.
 
-If you find FLAMES useful, please cite our paper.
+If you find FLAMES useful, please cite our paper: [**Flexible High-Level Synthesis Library for Linear Transformations**](https://wqzhao.org/assets/zhao2023flexible.pdf), accepted by IEEE TCAS-II.
 ```bibtex
 @article{flames_hls,
   title     = {Flexible High-Level Synthesis Library for Linear Transformations},
