@@ -4,6 +4,8 @@ Flexible Linear Algebra with Matrix-Empowered Synthesis (for Vitis HLS)
 Developed by [Wuqiong Zhao](https://wqzhao.org) and other contributors,
 from LEADS, Southeast University.
 
+## Citation
+
 If you find FLAMES useful, please cite our paper: [**Flexible High-Level Synthesis Library for Linear Transformations**](https://wqzhao.org/assets/zhao2023flexible.pdf), accepted by IEEE TCAS-II.
 ```bibtex
 @article{flames_hls,
@@ -18,7 +20,7 @@ If you find FLAMES useful, please cite our paper: [**Flexible High-Level Synthes
 
 ## Supported Versions
 Since FLAMES is a modern library written using C++14 (with some C++17 features),
-it only supports Vitis HLS 2020 or later where the CCC compiler version is 6.2.0.
+it only supports Vitis HLS 2020 or later where the GCC compiler version is 6.2.0.
 Notably, Vivado HLS is not supported.
 
 ## Usage
@@ -44,3 +46,4 @@ You can find more information about FLAMES in [`FLAMES_Insight.pdf`](https://fla
 
 ## License
 The FLAMES is open source and distributed by an Apache license (v2.0).
+Please [cite our paper](#citation) if you use FLAMES in your research.
