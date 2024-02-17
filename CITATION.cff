@@ -48,5 +48,9 @@ preferred-citation:
   - family-names: Zhang
     given-names: Chuan
   title: Flexible High-Level Synthesis Library for Linear Transformations
-  date-released: 2023-10-10
+  date-released: 2024-02-15
+  doi: "10.1109/TCSII.2024.3366282"
+  start: 1
+  end: 5
+  year: 2024
   journal: "IEEE Transactions on Circuits and Systems II: Express Briefs"
