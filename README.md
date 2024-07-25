@@ -8,13 +8,16 @@ from LEADS, Southeast University.
 
 If you find FLAMES useful, please cite our paper: [**Flexible High-Level Synthesis Library for Linear Transformations**](https://wqzhao.org/assets/zhao2023flexible.pdf), accepted by IEEE TCAS-II.
 ```bibtex
-@article{flames_hls,
+@article{zhao2024flexible,
   title     = {Flexible High-Level Synthesis Library for Linear Transformations},
   author    = {Zhao, Wuqiong and Li, Changhan and Ji, Zhenhao and Guo, Zhichen and Chen, Xuanbo and You, You and Huang, Yongming and You, Xiaohu and Zhang, Chuan},
-  journal   = {IEEE Transactions on Circuits and Systems II: Express Briefs},
-  year      = {2023},
-  published = {IEEE},
-  note      = {to be published}
+  journal   = {{IEEE} Transactions on Circuits and Systems {II}: Express Briefs},
+  volume    = {71},
+  number    = {7},
+  pages     = {3348--3352},
+  year      = {2024},
+  month     = jul,
+  publisher = {IEEE}
 }
 ```
 
