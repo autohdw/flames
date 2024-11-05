@@ -35,12 +35,12 @@ jobs:
           submodules: true
       - name: Install Doxygen
         run: |
-          # Install Doxygen 1.9.4
+          # Install Doxygen 1.12.0
           # This is because this version is compatible of my header template.
-          curl -kLSs https://github.com/doxygen/doxygen/releases/download/Release_1_9_4/doxygen-1.9.4.linux.bin.tar.gz -o doxygen-1.9.4.linux.tar.gz
-          gunzip doxygen-1.9.4.linux.tar.gz    # uncompress the archive
-          tar xf doxygen-1.9.4.linux.tar       # unpack it
-          cd doxygen-1.9.4
+          curl -kLSs https://github.com/doxygen/doxygen/releases/download/Release_1_12_0/doxygen-1.12.0.linux.bin.tar.gz -o doxygen-1.12.0.linux.tar.gz
+          gunzip doxygen-1.12.0.linux.tar.gz    # uncompress the archive
+          tar xf doxygen-1.12.0.linux.tar       # unpack it
+          cd doxygen-1.12.0
           sudo make install
           cd ..
           ## Install Graphviz

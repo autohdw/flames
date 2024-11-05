@@ -3,9 +3,9 @@
  * @author Wuqiong Zhao (me@wqzhao.org), et al.
  * @brief Core Utilities for FLAMES
  * @version 0.1.0
- * @date 2023-10-23
+ * @date 2024-11-04
  *
- * @copyright Copyright (c) 2022-2023 Wuqiong Zhao
+ * @copyright Copyright (c) 2022-2024 Wuqiong Zhao
  *
  */
 
@@ -43,7 +43,7 @@
 #endif
 
 #ifndef PRAGMA_SUB
-#    define PRAGMA_SUB(x) _Pragma(#    x)
+#    define PRAGMA_SUB(x) _Pragma(#x)
 #endif
 #ifndef FLAMES_PRAGMA
 // Alias for #pragma HLS with support for macro expansion.
@@ -388,6 +388,16 @@ inline constexpr size_t slowerRow(size_t index, size_t N) {
 template <typename T, size_t n_rows, size_t n_cols, MatType type = MatType::NORMAL>
 class Mat;
 
+/**
+ * @brief Tensor.
+ *
+ * @details 3-D data structure.
+ * @tparam T Element type.
+ * @tparam n_rows Number of rows.
+ * @tparam n_cols Number of columns.
+ * @tparam n_slices Number of slices.
+ * @tparam type matrix type.
+ */
 template <typename T, size_t n_rows, size_t n_cols, size_t n_slices, MatType type = MatType::NORMAL>
 class Tensor;
 
