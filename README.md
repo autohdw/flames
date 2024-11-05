@@ -25,8 +25,8 @@ Here is the NSA algorithm and the corresponding implementation using FLAMES:
 
 | Step | Algorithm                                    | FLAMES C++ Implementation          |
 | :--: | -------------------------------------------- | ---------------------------------- |
-| 1    | $\mathbf{D} = \mathbf{A} \circ \mathbf{I}$   | `auto D = mat.diagMat_();`         |
-| 2    | $\mathbf{E} = \mathbf{A} - \mathbf{D}$       | `auto E = mat.offDiag_();`         |
+| 1    | $\mathbf{D} = \mathbf{A} \circ \mathbf{I}$   | `auto D = A.diagMat_();`         |
+| 2    | $\mathbf{E} = \mathbf{A} - \mathbf{D}$       | `auto E = A.offDiag_();`         |
 | 3    | $\mathbf{D}_I = \mathbf{D}^{-1}$             | `auto D_I = D.inv();`              |
 | 4    | $\mathbf{P} = -\mathbf{D}_I \mathbf{E}$      | `auto P = -D_I * E;`               |
 | 5    | $\mathbf{X} = \mathbf{P}$ (Iter. 1)          | `auto X = P_ = P;`                 |
@@ -36,7 +36,7 @@ Here is the NSA algorithm and the corresponding implementation using FLAMES:
 | 9    | $\text{end}$                                 | `}`                                |
 | 10   | $\mathbf{A}^{-1} = \mathbf{X} \mathbf{D}_I + \mathbf{D}_I$ | `A_inv = X * D_I + D_I;` |
 
-*From Table 1 in [our paper](#citation), code available at [`examples/mat-inv-nsa`](examples/mat-inv-nsa).*
+*From Table 2 in [our paper](#citation), code available at [`examples/mat-inv-nsa`](examples/mat-inv-nsa).*
 
 ## Citation
 
