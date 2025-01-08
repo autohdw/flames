@@ -1,0 +1,26 @@
+% Compile with LuaLaTeX
+\documentclass{standalone}
+\usepackage{fontspec}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{tikz}
+\usepackage{emoji}
+
+\setemojifont{Noto Emoji}
+
+\begin{document}
+  \begin{tikzpicture}[
+    , very thick
+    , white
+    , outer sep = 0
+    , inner sep = 0
+    , c/.style = {
+      , circle
+      , draw
+      , minimum size = 2.5pt
+    }
+  ]
+    \node (fire) [scale = 2, minimum size = 1.5em] {\emoji{fire}};
+    \draw ([xshift = -7.5pt, yshift = 4.5pt]fire.south) -- ++ (3pt, -3pt) -- ++ (9pt, 0) -- ++ (4pt, 4pt) -- ++ (1.5pt, 0) node [right, c] {};
+    \draw ([xshift = -2pt, yshift = -11pt]fire.center) -- ++ (-7pt, 7pt) -- ++ (-1.5pt, 0) node [left, c] {};
+  \end{tikzpicture}
+\end{document}

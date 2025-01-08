@@ -1,4 +1,4 @@
 #!/bin/sh
 doxygen misc/Doxyfile
-cp misc/logo/favicon.ico misc/_doxygen/html/favicon.ico
+cp -r misc/favicon/* misc/_doxygen/html
 cp docs/FLAMES_Insight.pdf misc/_doxygen/html/FLAMES_Insight.pdf

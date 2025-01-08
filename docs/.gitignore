@@ -1,0 +1,7 @@
+*
+!*.tex
+!*.pdf
+!*.gitignore
+!flames-logo.svg
+!flames-banner.png
+!generate_png

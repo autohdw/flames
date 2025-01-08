@@ -1,0 +1,38 @@
+\documentclass{standalone}
+\usepackage{fontspec}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{tikz}
+\setmainfont{TeX Gyre Heros} % Helvetica clone
+\usetikzlibrary{positioning}
+
+\begin{document}
+
+\begin{tikzpicture}[
+  , n/.style = {
+    , minimum width = 50mm
+    , minimum height = 25mm
+    , align = left
+    , shading = axis
+    , left color = BrickRed
+    , right color = BurntOrange
+    , shading angle = 180
+    , scale = 4
+    , white
+  }
+  , outer sep = 0
+]
+  \node (main) [n] {
+    %
+    \null\\[1.5mm]
+    \hspace{9mm}\Large\textbf{FLAMES} \\[-1mm]
+    \hspace{9mm}\scriptsize High-Level Synthesis \\[3mm]
+    \null
+  };
+
+  \node [left = 28mm of main.center, yshift = 12mm, scale = 4] {\includegraphics{flames-logo-white.pdf}};
+
+  \node [below = 20mm of main.center, scale = 1.5, white] {\textbf{Vitis HLS} Support ~|~ C++14/17 ~|~ Template-Based ~|~ Header Only};
+
+\end{tikzpicture}%
+
+\end{document}
