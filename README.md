@@ -81,6 +81,9 @@ to access classes `Mat`, etc. directly instead of `flames::Mat`.
 ### Additional Insights
 You can find more information about FLAMES in [`FLAMES_Insight.pdf`](https://flames.autohdw.com/FLAMES_Insight.pdf).
 
+### HLS Basics
+For basic HLS usage as well as parallel programming using HLS for FPGAs, [the HLS book](https://hlsbook.ucsd.edu/) is a good one.
+
 ## License
 The FLAMES is open source and distributed by an Apache license (v2.0).
 Please [cite our paper](#citation) if you use FLAMES in your research.
